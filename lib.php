@@ -50,14 +50,21 @@ function bunamrag_supports($feature) {
  * @param mod_bunamrag_mod_form $mform The form.
  * @return int The id of the newly inserted record.
  */
-function bunamrag_add_instance($moduleinstance, $mform = null) {
+function bunamrag_add_instance(stdClass $data): int {
     global $DB;
 
-    $moduleinstance->timecreated = time();
+    // Crear un objeto con los datos a guardar.
+    $record = new stdClass();
+    $record->name = $data->name;
+    $record->course = $data->course;
+    $record->ragcoursecode = $data->ragcoursecode; // Asegúrate de incluir este campo.
+    $record->dxfid = $data->dxfid;
+    $record->dxeid = $data->dxeid;
+    $record->timecreated = time();
+    $record->timemodified = time();
 
-    $id = $DB->insert_record('bunamrag', $moduleinstance);
-
-    return $id;
+    // Insertar el registro en la base de datos.
+    return $DB->insert_record('bunamrag', $record);
 }
 
 /**
@@ -70,13 +77,21 @@ function bunamrag_add_instance($moduleinstance, $mform = null) {
  * @param mod_bunamrag_mod_form $mform The form.
  * @return bool True if successful, false otherwise.
  */
-function bunamrag_update_instance($moduleinstance, $mform = null) {
+function bunamrag_update_instance(stdClass $data): bool {
     global $DB;
 
-    $moduleinstance->timemodified = time();
-    $moduleinstance->id = $moduleinstance->instance;
+    // Crear un objeto con los datos a actualizar.
+    $record = new stdClass();
+    $record->id = $data->instance;
+    $record->name = $data->name;
+    $record->course = $data->course;
+    $record->ragcoursecode = $data->ragcoursecode; // Asegúrate de incluir este campo.
+    $record->dxfid = $data->dxfid;
+    $record->dxeid = $data->dxeid;
+    $record->timemodified = time();
 
-    return $DB->update_record('bunamrag', $moduleinstance);
+    // Actualizar el registro en la base de datos.
+    return $DB->update_record('bunamrag', $record);
 }
 
 /**
@@ -88,12 +103,12 @@ function bunamrag_update_instance($moduleinstance, $mform = null) {
 function bunamrag_delete_instance($id) {
     global $DB;
 
-    $exists = $DB->get_record('bunamrag', array('id' => $id));
+    $exists = $DB->get_record('bunamrag', ['id' => $id]);
     if (!$exists) {
         return false;
     }
 
-    $DB->delete_records('bunamrag', array('id' => $id));
+    $DB->delete_records('bunamrag', ['id' => $id]);
 
     return true;
 }

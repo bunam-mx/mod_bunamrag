@@ -25,4 +25,27 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['bunamragcoursecode'] = 'Course Code';
+$string['bunamragcoursecode_error'] = 'The course of the course into B@RAG Hub is required.';
+$string['bunamragcoursecode_help'] = 'Code of the course into B@RAG Hub.';
+$string['bunamragdxeid'] = 'Initial enrichment diagnostic';
+$string['bunamragdxeid_error'] = 'The ID of the course activity that is a initial enrichment diagnostic of unit is required.';
+$string['bunamragdxeid_help'] = 'ID of the course activity that is a initial enrichment diagnostic of unit';
+$string['bunamragdxfid'] = 'Initial fundamental diagnostic';
+$string['bunamragdxfid_error'] = 'The ID of the course activity that is a initial fundamental diagnostic of unit is required.';
+$string['bunamragdxfid_help'] = 'ID of the course activity that is a initial fundamental diagnostic of unit';
+$string['bunamragfieldset'] = 'Custom example fieldset';
+$string['bunamragintro'] = 'B@RAG intro';
+$string['bunamragintro_help'] = 'B@RAG intro help';
+$string['bunamragname'] = 'B@RAG Name';
+$string['bunamragname_error'] = 'The name of the B@RAG content is required.';
+$string['bunamragname_help'] = 'The name of the B@RAG content.';
+$string['bunamragname_placeholder'] = 'Enter the name of the B@RAG content here.';
+$string['bunamragsettings'] = 'B@RAG Settings';
+$string['bunamragsettings_error'] = 'The settings of the B@RAG content is required.';
+$string['bunamragsettings_help'] = 'The settings of the B@RAG content.';
+$string['bunamragsettings_placeholder'] = 'Enter the settings of the B@RAG content here.';
+$string['modulename'] = 'B@RAG Content';
+$string['modulenameplural'] = 'B@RAG Contents';
+$string['pluginadministration'] = 'B@RAG Administration';
 $string['pluginname'] = 'B@RAG';

@@ -37,7 +37,7 @@ class restore_bunamrag_activity_structure_step extends restore_activity_structur
      * @return restore_path_element[].
      */
     protected function define_structure() {
-        $paths = array();
+        $paths = [];
         $userinfo = $this->get_setting_value('userinfo');
 
         return $this->prepare_activity_structure($paths);

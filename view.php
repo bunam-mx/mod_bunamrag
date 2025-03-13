@@ -33,11 +33,11 @@ $b = optional_param('b', 0, PARAM_INT);
 
 if ($id) {
     $cm = get_coursemodule_from_id('bunamrag', $id, 0, false, MUST_EXIST);
-    $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-    $moduleinstance = $DB->get_record('bunamrag', array('id' => $cm->instance), '*', MUST_EXIST);
+    $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
+    $moduleinstance = $DB->get_record('bunamrag', ['id' => $cm->instance], '*', MUST_EXIST);
 } else {
-    $moduleinstance = $DB->get_record('bunamrag', array('id' => $b), '*', MUST_EXIST);
-    $course = $DB->get_record('course', array('id' => $moduleinstance->course), '*', MUST_EXIST);
+    $moduleinstance = $DB->get_record('bunamrag', ['id' => $b], '*', MUST_EXIST);
+    $course = $DB->get_record('course', ['id' => $moduleinstance->course], '*', MUST_EXIST);
     $cm = get_coursemodule_from_instance('bunamrag', $moduleinstance->id, $course->id, false, MUST_EXIST);
 }
 
@@ -45,15 +45,15 @@ require_login($course, true, $cm);
 
 $modulecontext = context_module::instance($cm->id);
 
-$event = \mod_bunamrag\event\course_module_viewed::create(array(
+$event = \mod_bunamrag\event\course_module_viewed::create([
     'objectid' => $moduleinstance->id,
-    'context' => $modulecontext
-));
+    'context' => $modulecontext,
+]);
 $event->add_record_snapshot('course', $course);
 $event->add_record_snapshot('bunamrag', $moduleinstance);
 $event->trigger();
 
-$PAGE->set_url('/mod/bunamrag/view.php', array('id' => $cm->id));
+$PAGE->set_url('/mod/bunamrag/view.php', ['id' => $cm->id]);
 $PAGE->set_title(format_string($moduleinstance->name));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($modulecontext);

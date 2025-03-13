@@ -40,6 +40,8 @@ class mod_bunamrag_mod_form extends moodleform_mod {
      */
     public function definition() {
         global $CFG;
+        global $DB;
+        global $COURSE;
 
         $mform = $this->_form;
 
@@ -47,7 +49,7 @@ class mod_bunamrag_mod_form extends moodleform_mod {
         $mform->addElement('header', 'general', get_string('general', 'form'));
 
         // Adding the standard "name" field.
-        $mform->addElement('text', 'name', get_string('bunamragname', 'mod_bunamrag'), array('size' => '64'));
+        $mform->addElement('text', 'name', get_string('bunamragname', 'mod_bunamrag'), ['size' => '64']);
 
         if (!empty($CFG->formatstringstriptags)) {
             $mform->setType('name', PARAM_TEXT);
@@ -59,17 +61,44 @@ class mod_bunamrag_mod_form extends moodleform_mod {
         $mform->addRule('name', get_string('maximumchars', '', 255), 'maxlength', 255, 'client');
         $mform->addHelpButton('name', 'bunamragname', 'mod_bunamrag');
 
-        // Adding the standard "intro" and "introformat" fields.
-        if ($CFG->branch >= 29) {
-            $this->standard_intro_elements();
+        // Get B@RAG code course.
+        $url = 'http://localhost:3333/asignaturas';
+        $response = file_get_contents($url);
+
+        if ($response === false) {
+            // Catch error if require fails.
+            $options = ['' => get_string('errorloadingoptions', 'mod_bunamrag')];
         } else {
-            $this->add_intro_editor();
+            // JSON decoded.
+            $data = json_decode($response, true);
+            $options = ['' => ''];
+            foreach ($data as $item) {
+                $options[$item['code']] = $item['name'];
+            }
         }
 
-        // Adding the rest of mod_bunamrag settings, spreading all them into this fieldset
-        // ... or adding more fieldsets ('header' elements) if needed for better logic.
-        $mform->addElement('static', 'label1', 'bunamragsettings', get_string('bunamragsettings', 'mod_bunamrag'));
-        $mform->addElement('header', 'bunamragfieldset', get_string('bunamragfieldset', 'mod_bunamrag'));
+        // Adding "ragcoursecode" select field.
+        $mform->addElement('select', 'ragcoursecode', get_string('bunamragcoursecode', 'mod_bunamrag'), $options);
+        $mform->setType('ragcoursecode', PARAM_TEXT);
+        $mform->addRule('ragcoursecode', null, 'required', null, 'client');
+        $mform->addHelpButton('ragcoursecode', 'bunamragcoursecode', 'mod_bunamrag');
+
+        // Get quiz activities of the course.
+        $quizoptions = ['' => ''];
+        $quizzes = $DB->get_records('quiz', ['course' => $COURSE->id], '', 'id, name');
+        foreach ($quizzes as $quiz) {
+            $quizoptions[$quiz->id] = $quiz->name;
+        }
+
+        // Adding the "dxfid" select field for quiz activities.
+        $mform->addElement('select', 'dxfid', get_string('bunamragdxfid', 'mod_bunamrag'), $quizoptions);
+        $mform->addHelpButton('dxfid', 'bunamragdxfid', 'mod_bunamrag');
+        $mform->addRule('dxfid', null, 'required', null, 'client');
+
+        // Adding the "dxfid" select field for quiz activities.
+        $mform->addElement('select', 'dxeid', get_string('bunamragdxeid', 'mod_bunamrag'), $quizoptions);
+        $mform->addHelpButton('dxeid', 'bunamragdxeid', 'mod_bunamrag');
+        $mform->addRule('dxeid', null, 'required', null, 'client');
 
         // Add standard elements.
         $this->standard_coursemodule_elements();
