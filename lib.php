@@ -55,9 +55,11 @@ function bunamrag_add_instance(stdClass $data): int {
 
     // Crear un objeto con los datos a guardar.
     $record = new stdClass();
-    $record->name = $data->name;
     $record->course = $data->course;
-    $record->ragcoursecode = $data->ragcoursecode; // Asegúrate de incluir este campo.
+    $record->name = $data->name;
+    $record->intro = $data->intro;
+    $record->introformat = $data->introformat;
+    $record->ragcoursecode = $data->ragcoursecode;
     $record->dxfid = $data->dxfid;
     $record->dxeid = $data->dxeid;
     $record->timecreated = time();
@@ -83,8 +85,10 @@ function bunamrag_update_instance(stdClass $data): bool {
     // Crear un objeto con los datos a actualizar.
     $record = new stdClass();
     $record->id = $data->instance;
-    $record->name = $data->name;
     $record->course = $data->course;
+    $record->name = $data->name;
+    $record->intro = $data->intro;
+    $record->introformat = $data->introformat;
     $record->ragcoursecode = $data->ragcoursecode; // Asegúrate de incluir este campo.
     $record->dxfid = $data->dxfid;
     $record->dxeid = $data->dxeid;

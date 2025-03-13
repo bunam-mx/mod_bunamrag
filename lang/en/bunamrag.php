@@ -27,6 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $string['bunamragcoursecode'] = 'Course Code';
 $string['bunamragcoursecode_error'] = 'The course of the course into B@RAG Hub is required.';
+$string['bunamragcoursecode_errorloadingoptions'] = 'Error loading options';
 $string['bunamragcoursecode_help'] = 'Code of the course into B@RAG Hub.';
 $string['bunamragdxeid'] = 'Initial enrichment diagnostic';
 $string['bunamragdxeid_error'] = 'The ID of the course activity that is a initial enrichment diagnostic of unit is required.';
@@ -37,6 +38,7 @@ $string['bunamragdxfid_help'] = 'ID of the course activity that is a initial fun
 $string['bunamragfieldset'] = 'Custom example fieldset';
 $string['bunamragintro'] = 'B@RAG intro';
 $string['bunamragintro_help'] = 'B@RAG intro help';
+$string['bunamragmenu_contents'] = 'Contents';
 $string['bunamragname'] = 'B@RAG Name';
 $string['bunamragname_error'] = 'The name of the B@RAG content is required.';
 $string['bunamragname_help'] = 'The name of the B@RAG content.';

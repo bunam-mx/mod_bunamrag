@@ -61,13 +61,16 @@ class mod_bunamrag_mod_form extends moodleform_mod {
         $mform->addRule('name', get_string('maximumchars', '', 255), 'maxlength', 255, 'client');
         $mform->addHelpButton('name', 'bunamragname', 'mod_bunamrag');
 
+        // Adding the "intro" and "introformat" fields.
+        $this->standard_intro_elements();
+
         // Get B@RAG code course.
         $url = 'http://localhost:3333/asignaturas';
         $response = file_get_contents($url);
 
         if ($response === false) {
             // Catch error if require fails.
-            $options = ['' => get_string('errorloadingoptions', 'mod_bunamrag')];
+            $options = ['' => get_string('bunamragcoursecode_errorloadingoptions', 'mod_bunamrag')];
         } else {
             // JSON decoded.
             $data = json_decode($response, true);
