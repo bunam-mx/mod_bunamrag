@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/bunamrag/db" VERSION="20250312" COMMENT="XMLDB file for Moodle mod_bunamrag"
+<XMLDB PATH="mod/bunamrag/db" VERSION="20250313" COMMENT="XMLDB file for Moodle mod_bunamrag"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -14,12 +14,31 @@
         <FIELD NAME="ragcoursecode" TYPE="char" LENGTH="4" NOTNULL="true" SEQUENCE="false" COMMENT="Code of the course into B@RAG Hub"/>
         <FIELD NAME="dxfid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="ID of the course activity that is a initial fundamental diagnostic of unit"/>
         <FIELD NAME="dxeid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="ID of the course activity that is a initial enrichment diagnostic of unit"/>
+        <FIELD NAME="sequence" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Sequence of contents"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Timestamp of when the instance was added to the course."/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Timestamp of when the instance was last modified."/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="fk_course" TYPE="foreign" FIELDS="course" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="bunamrag_contents" COMMENT="Strores the B@RAG contents for subtheme container">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="bunamrag" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="ragunit" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Name of the unit of the course into  B@RAG Hub."/>
+        <FIELD NAME="ragunitid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="ID of the unit of the course into  B@RAG Hub."/>
+        <FIELD NAME="ragtheme" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Name of the theme of the course into  B@RAG Hub."/>
+        <FIELD NAME="ragthemeid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="ID of the theme of the course into  B@RAG Hub."/>
+        <FIELD NAME="ragsubtheme" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Name of the subtheme of the course into  B@RAG Hub."/>
+        <FIELD NAME="ragsubthemeid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="ID of the subtheme of the course into  B@RAG Hub."/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Timestamp of when the instance was added to the course."/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Timestamp of when the instance was last modified."/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="bunamrag" TYPE="foreign" FIELDS="bunamrag" REFTABLE="bunamrag" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
   </TABLES>

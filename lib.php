@@ -140,4 +140,12 @@ function bunamrag_extend_navigation($bunamragnode, $course, $module, $cm) {
  * @param navigation_node $bunamragnode {@see navigation_node}
  */
 function bunamrag_extend_settings_navigation($settingsnav, $bunamragnode = null) {
+    global $PAGE;
+
+    if ($bunamragnode && has_capability('moodle/site:config', $PAGE->context)) {
+        $cm = $PAGE->cm;
+        $url = new moodle_url('/mod/bunamrag/contents.php', ['id' => $cm->id]);
+        $bunamragnode->add(get_string('bunamragmenu_contents', 'mod_bunamrag'), $url,
+            navigation_node::TYPE_SETTING, null, null, new pix_icon('i/settings', ''));
+    }
 }
