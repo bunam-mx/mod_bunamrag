@@ -75,15 +75,15 @@ if ($contents) {
     echo html_writer::start_div('bunamrag-content-items row');
     foreach ($contents as $content) {
         echo html_writer::start_div('bunamrag-content-item col-12 p-2 my-1 pr-6 border rounded rounded-1 d-flex align-items-center');
-        echo html_writer::link(new moodle_url('/mod/bunamrag/items.php', ['contentid' => $content->id]), html_writer::tag('h3', format_string($content->ragsubtheme), ['class' => 'bunamrag-content-title']));
+        echo html_writer::link(new moodle_url('/mod/bunamrag/items.php', ['id' => $cm->id, 'contentid' => $content->id]), html_writer::tag('h3', format_string($content->ragsubtheme), ['class' => 'bunamrag-content-title']));
         
         // Dropdown
         echo html_writer::start_div('dropdown ms-auto');
         echo html_writer::link('#', html_writer::tag('i', '', ['class' => 'icon fa fa-ellipsis-v fa-fw']), ['class' => 'dropdown-toggle', 'data-bs-toggle' => 'dropdown', 'aria-expanded' => 'false']);
         echo html_writer::start_div('dropdown-menu');
-        echo html_writer::link(new moodle_url('/mod/bunamrag/content.php', ['id' => $id, 'contentid' => $content->id]), get_string('edit'), ['class' => 'dropdown-item']);
-        echo html_writer::link(new moodle_url('/mod/bunamrag/deletecontent.php', ['id' => $content->id]), get_string('delete'), ['class' => 'dropdown-item']);
-        echo html_writer::link(new moodle_url('/mod/bunamrag/items.php', ['contentid' => $content->id]), get_string('viewitems', 'mod_bunamrag'), ['class' => 'dropdown-item']);
+        echo html_writer::link(new moodle_url('/mod/bunamrag/contents.php', ['id' => $id, 'contentid' => $content->id]), get_string('edit'), ['class' => 'dropdown-item']);
+        echo html_writer::link(new moodle_url('/mod/bunamrag/contents.php', ['id' => $id, 'contentid' => $content->id]), get_string('delete'), ['class' => 'dropdown-item']);
+        echo html_writer::link(new moodle_url('/mod/bunamrag/items.php', ['id' => $id, 'contentid' => $content->id]), get_string('viewitems', 'mod_bunamrag'), ['class' => 'dropdown-item']);
         echo html_writer::end_div();
         echo html_writer::end_div();        
         echo html_writer::end_div();
@@ -164,7 +164,7 @@ const send_content = () => {
                 const newContentDiv = document.createElement('div');
                 newContentDiv.className = 'bunamrag-content-item col-12 p-2 my-1 pr-6 border rounded rounded-1 d-flex align-items-center';
                 newContentDiv.innerHTML = `
-                    <a href="/mod/bunamrag/items.php?contentid=${result.record_id}">
+                    <a href="/mod/bunamrag/items.php?id=${id}&contentid=${result.record_id}">
                     <h3 class="bunamrag-content-title">${result.bunamrag_subtheme}</h3>
                     </a>
                     <div class="dropdown ms-auto">
@@ -172,9 +172,9 @@ const send_content = () => {
                         <i class="icon fa fa-ellipsis-v fa-fw"></i>
                     </a>
                     <div class="dropdown-menu">
-                        <a href="/mod/bunamrag/content.php?id=${id}&contentid=${result.record_id}" class="dropdown-item"><?= get_string('edit') ?></a>
-                        <a href="/mod/bunamrag/deletecontent.php?id=${result.record_id}" class="dropdown-item"><?= get_string('delete') ?></a>
-                        <a href="/mod/bunamrag/items.php?contentid=${result.record_id}" class="dropdown-item"><?= get_string('viewitems', 'mod_bunamrag') ?></a>
+                        <a href="/mod/bunamrag/contents.php?id=${id}&contentid=${result.record_id}" class="dropdown-item"><?= get_string('edit') ?></a>
+                        <a href="/mod/bunamrag/contents.php?id=${id}&contentid=${result.record_id}" class="dropdown-item"><?= get_string('delete') ?></a>
+                        <a href="/mod/bunamrag/items.php?id=${id}&contentid=${result.record_id}" class="dropdown-item"><?= get_string('viewitems', 'mod_bunamrag') ?></a>
                     </div>
                     </div>
                 `;
