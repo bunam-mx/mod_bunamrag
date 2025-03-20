@@ -51,6 +51,7 @@ $string['bunamragsettings_error'] = 'The settings of the B@RAG content is requir
 $string['bunamragsettings_help'] = 'The settings of the B@RAG content.';
 $string['bunamragsettings_placeholder'] = 'Enter the settings of the B@RAG content here.';
 
+$string['close'] = 'Close';
 $string['contentdescription'] = 'Content Description';
 $string['contentname'] = 'Content Name';
 $string['createcontent'] = 'Create Content';
@@ -64,3 +65,9 @@ $string['pluginname'] = 'B@RAG';
 $string['ragsubthemeid'] = 'Subtheme';
 $string['ragthemeid'] = 'Theme';
 $string['ragunitid'] = 'Unit';
+$string['save'] = 'Save';
+
+$string['viewitems'] = 'View Items';
+
+$string['bunamrag:addinstance'] = 'Add a new B@RAG content';
+$string['bunamrag:view'] = 'View B@RAG content';
