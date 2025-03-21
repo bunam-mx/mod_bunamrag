@@ -25,6 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['addactivity'] = 'Add Activity';
 $string['bunamragcoursecode'] = 'Course Code';
 $string['bunamragcoursecode_error'] = 'The course of the course into B@RAG Hub is required.';
 $string['bunamragcoursecode_errorloadingoptions'] = 'Error loading options';
@@ -41,11 +42,14 @@ $string['bunamragfieldset'] = 'Custom example fieldset';
 $string['bunamragintro'] = 'B@RAG intro';
 $string['bunamragintro_help'] = 'B@RAG intro help';
 $string['bunamragmenu_contents'] = 'Contents';
+$string['bunamragmenu_items'] = 'Items';
 $string['bunamragname'] = 'B@RAG Name';
 $string['bunamragname_error'] = 'The name of the B@RAG content is required.';
 $string['bunamragname_help'] = 'The name of the B@RAG content.';
 $string['bunamragname_placeholder'] = 'Enter the name of the B@RAG content here.';
 $string['bunamragnocontents'] = 'There are no contents to show.';
+$string['bunamragnoitems'] = 'There are no items to show.';
+$string['bunamragremoveitem'] = 'Remove Item';
 $string['bunamragsettings'] = 'B@RAG Settings';
 $string['bunamragsettings_error'] = 'The settings of the B@RAG content is required.';
 $string['bunamragsettings_help'] = 'The settings of the B@RAG content.';
@@ -56,6 +60,7 @@ $string['contentdescription'] = 'Content Description';
 $string['contentname'] = 'Content Name';
 $string['createcontent'] = 'Create Content';
 $string['editcontent'] = 'Edit Content';
+$string['hvpactivity'] = 'H5P Activity';
 
 $string['modulename'] = 'B@RAG Content';
 $string['modulenameplural'] = 'B@RAG Contents';
