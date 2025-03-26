@@ -63,11 +63,15 @@ class backup_bunamrag_activity_task extends backup_activity_task {
 
         // Link to the list of choices.
         $search = "/(".$base."\//mod\/bunamrag\/index.php\?id\=)([0-9]+)/";
-        $content = preg_replace($search, '$@BUNAMRAGINDEX*$2@$', $content);
+        if ($content !== null) {
+            $content = preg_replace($search, '$@BUNAMRAGINDEX*$2@$', $content);
+        }
 
         // Link to choice view by moduleid.
         $search = "/(".$base."\//mod\/bunamrag\/view.php\?id\=)([0-9]+)/";
-        $content = preg_replace($search, '$@BUNAMRAGVIEWBYID*$2@$', $content);
+        if ($content !== null) {
+            $content = preg_replace($search, '$@BUNAMRAGVIEWBYID*$2@$', $content);
+        }
 
         return $content;
     }
