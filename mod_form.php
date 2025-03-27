@@ -62,7 +62,8 @@ class mod_bunamrag_mod_form extends moodleform_mod {
         $mform->addHelpButton('name', 'bunamragname', 'mod_bunamrag');
 
         // Adding the "intro" and "introformat" fields.
-        $this->standard_intro_elements();
+        $this->standard_intro_elements(get_string('bunamragintro', 'mod_bunamrag'));
+        $this->add_standard_elements($mform);
 
         // Get B@RAG code course.
         $url = 'http://localhost:3333/asignaturas';
@@ -108,5 +109,11 @@ class mod_bunamrag_mod_form extends moodleform_mod {
 
         // Add standard buttons.
         $this->add_action_buttons();
+    }
+
+    protected function add_standard_elements(&$mform) {
+        // Campos estándares como "Mostrar descripción en la página del curso"
+        $mform->addElement('advcheckbox', 'showdescription', get_string('bunamragshowdescription', 'mod_bunamrag'));
+        $mform->setDefault('showdescription', 0);
     }
 }
