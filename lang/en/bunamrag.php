@@ -54,7 +54,7 @@ $string['bunamragsettings'] = 'B@RAG Settings';
 $string['bunamragsettings_error'] = 'The settings of the B@RAG content is required.';
 $string['bunamragsettings_help'] = 'The settings of the B@RAG content.';
 $string['bunamragsettings_placeholder'] = 'Enter the settings of the B@RAG content here.';
-
+$string['bunamragshowdescription'] = 'Display description on course page';
 $string['close'] = 'Close';
 $string['contentdescription'] = 'Content Description';
 $string['contentname'] = 'Content Name';
@@ -64,6 +64,9 @@ $string['hvpactivity'] = 'H5P Activity';
 
 $string['modulename'] = 'B@RAG Content';
 $string['modulenameplural'] = 'B@RAG Contents';
+$string['nosections'] = 'There are no sections in the course';
+$string['nosubcourse'] = 'No subcourse available';
+$string['nosubcourseavailable'] = 'There are no subcourses available in the course';
 $string['pluginadministration'] = 'B@RAG Administration';
 $string['pluginname'] = 'B@RAG';
 
@@ -71,6 +74,9 @@ $string['ragsubthemeid'] = 'Subtheme';
 $string['ragthemeid'] = 'Theme';
 $string['ragunitid'] = 'Unit';
 $string['save'] = 'Save';
+$string['selectsubcourse'] = 'Select Subcourse';
+$string['subcourseid'] = 'Subcourse';
+$string['subcourseid_help'] = 'Select the subcourse where the activity will be added';
 
 $string['viewitems'] = 'View Items';
 

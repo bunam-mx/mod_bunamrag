@@ -192,8 +192,8 @@ const send_activity = () => {
     });
 };
 
-const get_activities = (courseid, sectionid) => {
-    fetch(`ajax/get_section_activities.php?courseid=${courseid}&sectionid=${sectionid}`)
+const get_activities = (courseid) => {
+    fetch(`ajax/get_subcourse_activities.php?courseid=${courseid}`)
         .then(response => response.json())
         .then(data => {
             console.log(data);
@@ -203,14 +203,20 @@ const get_activities = (courseid, sectionid) => {
 
             // Limpiar las opciones actuales del select
             select.innerHTML = '<option value=""></option>';
-
-            // Agregar las nuevas opciones al select
-            data.forEach((item) => {
+            if(data.length == 0) {
                 var option = document.createElement("option");
-                option.value = item.id;
-                option.text = item.name;
+                option.text = 'No subcourse activities available';
                 select.appendChild(option);
-            });
+                return;
+            } else {
+                // Agregar las nuevas opciones al select
+                data.forEach((item) => {
+                    var option = document.createElement("option");
+                    option.value = item.id;
+                    option.text = item.name;
+                    select.appendChild(option);
+                });
+            }
         });
 };
 
@@ -250,16 +256,16 @@ document.addEventListener('DOMContentLoaded', function() {
     set_dropdowns();
 
     document.getElementById('addActivityBtn').addEventListener('click', function() {
-        const courseid = document.querySelector('input[name="courseid"]').value;
-        const sectionidSelect = document.getElementById('id_sectionid');
+        const subcourseSelect = document.getElementById('id_subcourseid');
         const hvpidSelect = document.getElementById('id_hvpid');
 
-        sectionidSelect.value = '';
+        subcourseSelect.value = '';
         hvpidSelect.innerHTML = '<option value=""></option>';
         
-        sectionidSelect.addEventListener('change', function() {
-            var sectionid = sectionidSelect.options[sectionidSelect.selectedIndex];
-            get_activities(courseid, sectionid.value);
+        subcourseSelect.addEventListener('change', function() {
+            var subcourse = subcourseSelect.options[subcourseSelect.selectedIndex];
+            console.log(subcourse.value);
+            get_activities(subcourse.value);
         });        
     });
 

@@ -23,20 +23,30 @@ class item_form extends \moodleform {
         $mform->addElement('hidden', 'bunamragcontent', $this->_customdata['bunamragcontent']);
         $mform->setType('bunamragcontent', PARAM_INT);
         
-        // Get all the sections in the course.
-        $sections = $DB->get_records('course_sections', ['course' => $COURSE->id], 'section', 'id, section, name');
-        $sectionoptions = ['' => get_string('choosesection', 'mod_ragbunam')];
+        // Consulta para obtener las actividades Subcourse del curso actual
+        $subcourses = $DB->get_records_sql("
+        SELECT cm.id AS cmid, m.name AS modname, s.name AS subcoursename, s.refcourse AS subcourseid
+        FROM {course_modules} cm
+        JOIN {modules} m ON cm.module = m.id
+        JOIN {subcourse} s ON cm.instance = s.id
+        WHERE cm.course = ? AND m.name = 'subcourse'
+        ", [$COURSE->id]);
 
-        foreach ($sections as $section) {
-            $sectionname = $section->name ? $section->name : $section->section;
-            $sectionoptions[$section->id] = $sectionname;
+        // Crear un array con las actividades Subcourse
+        $subcourselist = ['' => ''];
+        foreach ($subcourses as $subcourse) {
+            $subcourselist[$subcourse->subcourseid] = $subcourse->subcoursename;
         }
 
-        // Select field for the section.
-        $mform->addElement('select', 'sectionid', get_string('section', 'mod_ragbunam'), $sectionoptions);
-        $mform->setType('sectionid', PARAM_INT);
-        $mform->addRule('sectionid', null, 'required', null, 'client');
-
+        // Agregar un campo de selección para las actividades Subcourse
+        if (!empty($subcourselist)) {
+            $mform->addElement('select', 'subcourseid', get_string('selectsubcourse', 'mod_bunamrag'), $subcourselist);
+            $mform->setDefault('subcourseid', '');
+            $mform->addHelpButton('subcourseid', 'subcourseid', 'mod_bunamrag');
+        } else {
+            $mform->addElement('static', 'nosubcourse', get_string('nosubcourse', 'mod_bunamrag'), get_string('nosubcourseavailable', 'mod_bunamrag'));
+        }
+        
         $mform->addElement('select', 'hvpid', get_string('hvpactivity', 'mod_bunamrag'), ["" => ""]);
         $mform->setType('hvpid', PARAM_INT);
         $mform->addRule('hvpid', null, 'required', null, 'client');        
