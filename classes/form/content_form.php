@@ -29,8 +29,8 @@ class content_form extends \moodleform {
         $mform->setType('ragthemeid', PARAM_INT);
         $mform->addRule('ragthemeid', null, 'required', null, 'client');
 
-        $mform->addElement('select', 'ragsubthemeid', get_string('ragsubthemeid', 'mod_bunamrag'), ["" => ""]);
-        $mform->setType('ragsubthemeid', PARAM_INT);
-        $mform->addRule('ragsubthemeid', null, 'required', null, 'client');        
+        $mform->addElement('select', 'ragsubthemesection', get_string('ragsubthemeid', 'mod_bunamrag'), ["" => ""]);
+        $mform->setType('ragsubthemesection', PARAM_INT);
+        $mform->addRule('ragsubthemesection', null, 'required', null, 'client');        
     }
 }
