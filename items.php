@@ -54,8 +54,9 @@ $PAGE->navbar->add(get_string('bunamragmenu_items', 'mod_bunamrag'));
 
 // Renderizar la página.
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('bunamragmenu_items', 'mod_bunamrag'));
- 
+echo $OUTPUT->heading(get_string('bunamragmenu_items', 'mod_bunamrag'), 2, ['class' => 'h3']);
+$content = $DB->get_record('bunamrag_contents', ['id' => $contentid], '*', MUST_EXIST);
+echo html_writer::tag('h3', $content->ragsubtheme, ['class' => 'my-4 border-bottom pb-2 px-4 text-black-50 h4']);
 // Get all items from the bunamrag_contents table that correspond to the current activity.
 $items = $DB->get_records('bunamrag_items', ['bunamragcontent' => $contentid], 'timecreated ASC');
 
@@ -81,13 +82,13 @@ if ($items) {
     echo html_writer::start_div('bunamrag-item-activities row');
     foreach ($items as $item) {
         echo html_writer::start_div('bunamrag-item-activity col-12 p-2 my-1 pr-6 border rounded rounded-1 d-flex align-items-center');
-        echo html_writer::link(new moodle_url('/mod/hvp/view.php', ['id' => $item->hvpid]), html_writer::tag('h3', format_string($item->hvptitle), ['class' => 'bunamrag-content-title']));
+        echo html_writer::link(new moodle_url('/mod/hvp/view.php', ['id' => $item->hvpid]), html_writer::tag('h3', format_string($item->hvptitle), ['class' => 'bunamrag-content-title h4']), ['target' => '_blank']);
         
         // Dropdown
         echo html_writer::start_div('dropdown ms-auto');
         echo html_writer::link('#', html_writer::tag('i', '', ['class' => 'icon fa fa-ellipsis-v fa-fw']), ['class' => 'dropdown-toggle', 'data-bs-toggle' => 'dropdown', 'aria-expanded' => 'false']);
         echo html_writer::start_div('dropdown-menu');
-        echo html_writer::link(new moodle_url('/mod/hvp/view.php', ['id' => $item->id]), get_string('edit'), ['class' => 'dropdown-item']);
+        echo html_writer::link(new moodle_url('/mod/hvp/view.php', ['id' => $item->id]), get_string('edit'), ['class' => 'dropdown-item'], ['target' => '_blank']);
         echo html_writer::link(new moodle_url('/mod/hvp/view.php', ['id' => $item->id]), get_string('bunamragremoveitem', 'mod_bunamrag'), ['class' => 'dropdown-item']);
         echo html_writer::end_div();
         echo html_writer::end_div();        
@@ -165,8 +166,8 @@ const send_activity = () => {
                 const newActivity = document.createElement('div');
                 newActivity.classList.add('bunamrag-item-activity', 'col-12', 'p-2', 'my-1', 'pr-6', 'border', 'rounded', 'rounded-1', 'd-flex', 'align-items-center');
                 newActivity.innerHTML = `
-                    <a href=${M.cfg.wwwroot}/mod/hvp/view.php?id=${result.hvpid}>
-                    <h3 class="bunamrag-content-title">${result.hvptitle}</h3>
+                    <a href=${M.cfg.wwwroot}/mod/hvp/view.php?id=${result.hvpid} target="_blank">
+                    <h3 class="bunamrag-content-title h4">${result.hvptitle}</h3>
                     </a>
                     <div class="dropdown ms-auto">
                         <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
