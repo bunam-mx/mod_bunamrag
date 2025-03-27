@@ -41,7 +41,7 @@ try {
         'ragunit' => required_param('ragunit', PARAM_TEXT),
         'ragthemeid' => required_param('ragthemeid', PARAM_INT),
         'ragtheme' => required_param('ragtheme', PARAM_TEXT),
-        'ragsubthemeid' => required_param('ragsubthemeid', PARAM_INT),
+        'ragsubthemesection' => required_param('ragsubthemesection', PARAM_TEXT),
         'ragsubtheme' => required_param('ragsubtheme', PARAM_TEXT),
     ];
 
@@ -58,7 +58,7 @@ try {
     $record->ragunit = $data['ragunit'];
     $record->ragthemeid = $data['ragthemeid'];
     $record->ragtheme = $data['ragtheme'];
-    $record->ragsubthemeid = $data['ragsubthemeid'];
+    $record->ragsubthemesection = $data['ragsubthemesection'];
     $record->ragsubtheme = $data['ragsubtheme'];
     $record->timecreated = time();
     $record->timemodified = time();

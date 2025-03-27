@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/bunamrag/db" VERSION="20250320" COMMENT="XMLDB file for Moodle mod_bunamrag"
+<XMLDB PATH="mod/bunamrag/db" VERSION="20250327" COMMENT="XMLDB file for Moodle mod_bunamrag"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -32,7 +32,7 @@
         <FIELD NAME="ragtheme" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Name of the theme of the course into  B@RAG Hub."/>
         <FIELD NAME="ragthemeid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="ID of the theme of the course into  B@RAG Hub."/>
         <FIELD NAME="ragsubtheme" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Name of the subtheme of the course into  B@RAG Hub."/>
-        <FIELD NAME="ragsubthemeid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="ID of the subtheme of the course into  B@RAG Hub."/>
+        <FIELD NAME="ragsubthemesection" TYPE="char" LENGTH="8" NOTNULL="true" SEQUENCE="false" COMMENT="Section for the content into  B@RAG Hub."/>
         <FIELD NAME="sequence" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Timestamp of when the instance was added to the course."/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Timestamp of when the instance was last modified."/>

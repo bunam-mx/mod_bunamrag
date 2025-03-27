@@ -48,7 +48,7 @@ $PAGE->set_context($context);
 $PAGE->activityrecord->intro = '';
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('bunamragmenu_contents', 'mod_bunamrag'));
+echo $OUTPUT->heading(get_string('bunamragmenu_contents', 'mod_bunamrag'), 2, ['class' => 'h3']);
 
 // Get all items from the bunamrag_contents table that correspond to the current activity.
 $contents = $DB->get_records('bunamrag_contents', ['bunamrag' => $moduleinstance->id]);
@@ -75,7 +75,7 @@ if ($contents) {
     echo html_writer::start_div('bunamrag-content-items row');
     foreach ($contents as $content) {
         echo html_writer::start_div('bunamrag-content-item col-12 p-2 my-1 pr-6 border rounded rounded-1 d-flex align-items-center');
-        echo html_writer::link(new moodle_url('/mod/bunamrag/items.php', ['id' => $cm->id, 'contentid' => $content->id]), html_writer::tag('h3', format_string($content->ragsubtheme), ['class' => 'bunamrag-content-title']));
+        echo html_writer::link(new moodle_url('/mod/bunamrag/items.php', ['id' => $cm->id, 'contentid' => $content->id]), html_writer::tag('h3', format_string($content->ragsubtheme), ['class' => 'bunamrag-content-title h4']));
         
         // Dropdown
         echo html_writer::start_div('dropdown ms-auto');
@@ -129,8 +129,8 @@ const send_content = () => {
             ragunit: document.querySelector('#id_ragunitid option:checked').text,
             ragthemeid: parseInt(document.querySelector('#id_ragthemeid option:checked').value), // Convertir a entero
             ragtheme: document.querySelector('#id_ragthemeid option:checked').text,
-            ragsubthemeid: parseInt(document.querySelector('#id_ragsubthemeid option:checked').value), // Convertir a entero
-            ragsubtheme: document.querySelector('#id_ragsubthemeid option:checked').text,
+            ragsubthemesection: document.querySelector('#id_ragsubthemesection option:checked').value,
+            ragsubtheme: document.querySelector('#id_ragsubthemesection option:checked').text,
             sesskey: document.querySelector('input[name="sesskey"]').value,
         };
 
@@ -164,17 +164,17 @@ const send_content = () => {
                 const newContentDiv = document.createElement('div');
                 newContentDiv.className = 'bunamrag-content-item col-12 p-2 my-1 pr-6 border rounded rounded-1 d-flex align-items-center';
                 newContentDiv.innerHTML = `
-                    <a href="/mod/bunamrag/items.php?id=${id}&contentid=${result.record_id}">
-                    <h3 class="bunamrag-content-title">${result.bunamrag_subtheme}</h3>
+                    <a href="${M.cfg.wwwroot}/mod/bunamrag/items.php?id=${id}&contentid=${result.record_id}">
+                    <h3 class="bunamrag-content-title h4">${result.bunamrag_subtheme}</h3>
                     </a>
                     <div class="dropdown ms-auto">
                     <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="icon fa fa-ellipsis-v fa-fw"></i>
                     </a>
                     <div class="dropdown-menu">
-                        <a href="/mod/bunamrag/contents.php?id=${id}&contentid=${result.record_id}" class="dropdown-item"><?= get_string('edit') ?></a>
-                        <a href="/mod/bunamrag/contents.php?id=${id}&contentid=${result.record_id}" class="dropdown-item"><?= get_string('delete') ?></a>
-                        <a href="/mod/bunamrag/items.php?id=${id}&contentid=${result.record_id}" class="dropdown-item"><?= get_string('viewitems', 'mod_bunamrag') ?></a>
+                        <a href="${M.cfg.wwwroot}/mod/bunamrag/contents.php?id=${id}&contentid=${result.record_id}" class="dropdown-item"><?= get_string('edit') ?></a>
+                        <a href="${M.cfg.wwwroot}/mod/bunamrag/contents.php?id=${id}&contentid=${result.record_id}" class="dropdown-item"><?= get_string('delete') ?></a>
+                        <a href="${M.cfg.wwwroot}/mod/bunamrag/items.php?id=${id}&contentid=${result.record_id}" class="dropdown-item"><?= get_string('viewitems', 'mod_bunamrag') ?></a>
                     </div>
                     </div>
                 `;
@@ -230,8 +230,8 @@ const getSubthemes = (bunamragHub, ragthemeid) => {
         // Manejar la respuesta de la petición
         console.log(data);
 
-        // Obtener el select con el id 'dynamic_ragsubthemeid'
-        var select = document.getElementById("id_ragsubthemeid");
+        // Obtener el select con el id 'dynamic_ragsubthemesection'
+        var select = document.getElementById("id_ragsubthemesection");
 
         // Limpiar las opciones actuales del select
         select.innerHTML = '<option value=""></option>';
@@ -239,7 +239,7 @@ const getSubthemes = (bunamragHub, ragthemeid) => {
         // Agregar las nuevas opciones al select
         data.forEach((item) => {
         var option = document.createElement("option");
-        option.value = item.id;
+        option.value = item.section;
         option.text = item.name;
         select.appendChild(option);
         });
@@ -293,8 +293,8 @@ document.addEventListener('DOMContentLoaded', function() {
         select_ragunitid.innerHTML = '<option></option>'; // Clear existing options
         const select_ragthemeid = document.getElementById('id_ragthemeid');
         select_ragthemeid.innerHTML = '<option></option>'; // Clear existing options
-        const select_ragsubthemeid = document.getElementById('id_ragsubthemeid');
-        select_ragsubthemeid.innerHTML = '<option></option>'; // Clear existing options
+        const select_ragsubthemesection = document.getElementById('id_ragsubthemesection');
+        select_ragsubthemesection.innerHTML = '<option></option>'; // Clear existing options
 
         fetch(`${bunamragHub}/unidades/${ragcoursecode}`)
             .then(response => response.json())
