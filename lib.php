@@ -21,7 +21,7 @@
  * @copyright   2025 Omar Terrazas Razo <terrazasrazo@gmail.com>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
+define('BUNAMRAGHUB', 'http://localhost:3333'); // URL for B@RAG Hub.
 /**
  * Return if the plugin supports $feature.
  *
@@ -148,4 +148,91 @@ function bunamrag_extend_settings_navigation($settingsnav, $bunamragnode = null)
         $bunamragnode->add(get_string('bunamragmenu_contents', 'mod_bunamrag'), $url,
             navigation_node::TYPE_SETTING, null, null, new pix_icon('i/settings', ''));
     }
+}
+
+use mod_quiz\quiz_attempt;
+/**
+ * Retrieves a summary of quiz results by section for a specific user in a course.
+ *
+ * @param int $quizid The ID of the quiz.
+ * @param int $userid The ID of the user.
+ * @param int $courseid The ID of the course.
+ * @return array An associative array containing the summary of quiz results by section.
+ */
+function get_quiz_results_by_section_summary($quizid, $userid, $courseid) {
+    global $DB;
+
+    // Get the quiz object.
+    $quiz = $DB->get_record('quiz', ['id' => $quizid], '*', MUST_EXIST);
+
+    // Get the course module.
+    $cm = get_coursemodule_from_instance('quiz', $quizid, $courseid, false, MUST_EXIST);
+
+    // Get the course object.
+    $course = get_course($courseid);
+
+    // Get the user's attempts on the quiz.
+    $attempts = quiz_get_user_attempts($quizid, $userid, 'finished');
+    $results = [];
+
+    foreach ($attempts as $attempt) {
+        // Create the quiz_attempt object.
+        $quizattempt = new quiz_attempt($attempt, $quiz, $cm, $course);
+        $questionusageid = $quizattempt->get_uniqueid();
+        $quba = question_engine::load_questions_usage_by_activity($questionusageid);
+
+        // Get the layout of the specific attempt.
+        $layout = explode(',', $attempt->layout);
+        $sections = [];
+        $currentsection = [];
+
+        // Interpret the layout to group questions by section.
+        foreach ($layout as $slot) {
+            if ($slot == '0') {
+                // End of a section.
+                if (!empty($currentsection)) {
+                    $sections[] = $currentsection;
+                    $currentsection = [];
+                }
+            } else {
+                // Add the slot to the current section.
+                $currentsection[] = (int)$slot;
+            }
+        }
+
+        // If there is an unclosed section, add it.
+        if (!empty($currentsection)) {
+            $sections[] = $currentsection;
+        }
+
+        $sectionsname = $DB->get_fieldset_select('quiz_sections', 'heading', 'quizid = ?', [$quizid]);
+
+        // Process each section.
+        $sectionnumber = 0;
+        foreach ($sections as $slots) {
+            // Initialize variables for the section.
+            $sectionmaxgrade = 0;
+            $sectiongradeobtained = 0;
+            $questioncount = 0;
+
+            foreach ($slots as $slot) {
+                $qa = $quba->get_question_attempt($slot);
+                $gradeobtained = $qa->get_fraction() * $qa->get_max_mark();
+                $maxgrade = $qa->get_max_mark();
+
+                // Accumulate grades and count questions.
+                $sectionmaxgrade += $maxgrade;
+                $sectiongradeobtained += $gradeobtained;
+                $questioncount++;
+            }
+
+            $results[] = [
+                'section_name' => $sectionsname[$sectionnumber],
+                'passed' => ($sectiongradeobtained == $sectionmaxgrade) ? 1 : 0,
+            ];
+            $sectionnumber++;
+        }
+    }
+
+    return $results;
 }

@@ -26,6 +26,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['addactivity'] = 'Add Activity';
+$string['bunamrag:addinstance'] = 'Add a new B@RAG content';
+$string['bunamrag:view'] = 'View B@RAG content';
 $string['bunamragcoursecode'] = 'Course Code';
 $string['bunamragcoursecode_error'] = 'The course of the course into B@RAG Hub is required.';
 $string['bunamragcoursecode_errorloadingoptions'] = 'Error loading options';
@@ -79,6 +81,3 @@ $string['subcourseid'] = 'Subcourse';
 $string['subcourseid_help'] = 'Select the subcourse where the activity will be added';
 
 $string['viewitems'] = 'View Items';
-
-$string['bunamrag:addinstance'] = 'Add a new B@RAG content';
-$string['bunamrag:view'] = 'View B@RAG content';

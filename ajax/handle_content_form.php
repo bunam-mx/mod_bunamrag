@@ -22,18 +22,18 @@
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(__DIR__ . '/../../../config.php'); // Incluye el archivo de configuración de Moodle
+require_once(__DIR__ . '/../../../config.php');
 
 
-require_login(); // Asegura que el usuario esté autenticado
-require_sesskey(); // Protege contra CSRF
+require_login(); // Ensures the user is authenticated.
+require_sesskey(); // Protects against CSRF.
 
-header('Content-Type: application/json'); // Indica que la respuesta será JSON
+header('Content-Type: application/json'); // Indicates that the response will be JSON.
 
 global $DB;
 
 try {
-    // Obtener los datos enviados por POST
+    // Retrieve the data sent via POST.
     $data = [
         'bunamrag' => required_param('bunamrag', PARAM_TEXT),
         'ragcoursecode' => required_param('ragcoursecode', PARAM_TEXT),
@@ -45,12 +45,12 @@ try {
         'ragsubtheme' => required_param('ragsubtheme', PARAM_TEXT),
     ];
 
-    // Validar los datos
+    // Validate the data.
     if (empty($data['bunamrag']) || empty($data['ragcoursecode'])) {
-        throw new Exception('Datos incompletos');
+        throw new Exception('Incomplete data.');
     }
 
-    // Guardar los datos en la base de datos
+    // Save the data to the database.
     $record = new \stdClass();
     $record->bunamrag = $data['bunamrag'];
     $record->ragcoursecode = $data['ragcoursecode'];
@@ -65,18 +65,18 @@ try {
 
     $result = $DB->insert_record('bunamrag_contents', $record);
 
-    // Devolver una respuesta JSON exitosa
+    // Return a successful JSON response.
     echo json_encode([
         'success' => true,
-        'message' => 'Datos guardados correctamente',
+        'message' => 'Data saved successfully.',
         'record_id' => $result,
-        'bunamrag_subtheme' => $record->ragsubtheme
+        'bunamrag_subtheme' => $record->ragsubtheme,
     ]);
 } catch (Exception $e) {
-    // Devolver una respuesta JSON en caso de error
+    // Return a JSON response in case of an error.
     echo json_encode([
         'success' => false,
-        'message' => $e->getMessage()
+        'message' => $e->getMessage(),
     ]);
 }
 exit;

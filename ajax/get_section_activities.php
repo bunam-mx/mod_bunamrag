@@ -15,15 +15,15 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Display information about all the mod_ragbunam modules in the requested course.
+ * Display information about all the mod_bunamrag modules in the requested course.
  *
- * @package     mod_ragbunam
+ * @package     mod_bunamrag
  * @copyright   2025 Omar Terrazas Razo <terrazasrazo@gmail.com>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(__DIR__ . '/../../../config.php'); // Incluye el archivo de configuración de Moodle
-//require_login();
+require_once(__DIR__ . '/../../../config.php');
+require_login();
 
 global $DB;
 

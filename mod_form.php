@@ -25,6 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/course/moodleform_mod.php');
+require_once(__DIR__.'/lib.php');
 
 /**
  * Module instance settings form.
@@ -34,9 +35,15 @@ require_once($CFG->dirroot.'/course/moodleform_mod.php');
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class mod_bunamrag_mod_form extends moodleform_mod {
-
     /**
-     * Defines forms elements
+     * Defines the form elements for the module.
+     *
+     * This function is responsible for defining the structure and elements
+     * of the form used in the module. It is typically used to add fields,
+     * validation rules, and other configurations required for the module's
+     * form.
+     *
+     * @return void
      */
     public function definition() {
         global $CFG;
@@ -66,7 +73,7 @@ class mod_bunamrag_mod_form extends moodleform_mod {
         $this->add_standard_elements($mform);
 
         // Get B@RAG code course.
-        $url = 'http://localhost:3333/asignaturas';
+        $url = BUNAMRAGHUB . '/asignaturas';
         $response = file_get_contents($url);
 
         if ($response === false) {
@@ -111,8 +118,16 @@ class mod_bunamrag_mod_form extends moodleform_mod {
         $this->add_action_buttons();
     }
 
+    /**
+     * Adds standard elements to the form.
+     *
+     * This method is used to include the standard form elements
+     * required for the module configuration in Moodle.
+     *
+     * @param MoodleQuickForm $mform Reference to the form object where elements will be added.
+     * @return void
+     */
     protected function add_standard_elements(&$mform) {
-        // Campos estándares como "Mostrar descripción en la página del curso"
         $mform->addElement('advcheckbox', 'showdescription', get_string('bunamragshowdescription', 'mod_bunamrag'));
         $mform->setDefault('showdescription', 0);
     }
