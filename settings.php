@@ -26,9 +26,21 @@
 defined('MOODLE_INTERNAL') || die();
 
 if ($hassiteconfig) {
-    $settings = new admin_settingpage('mod_bunamrag_settings', new lang_string('pluginname', 'mod_bunamrag'));
-
-    // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedIf
     if ($ADMIN->fulltree) {
+        // Header to group settings.
+        $settings->add(new admin_setting_heading(
+            'mod_bunamrag_settings',
+            get_string('api_settings', 'mod_bunamrag'),
+            get_string('api_settings_desc', 'mod_bunamrag')
+        ));
+
+        // Configuration for the API URL.
+        $settings->add(new admin_setting_configtext(
+            'mod_bunamrag/bunamraghub', // Unique key for the setting.
+            get_string('bunamraghub', 'mod_bunamrag'), // Setting title.
+            get_string('bunamraghub_desc', 'mod_bunamrag'), // Setting description.
+            '', // Default value (empty).
+            PARAM_URL // Validation: must be a valid URL.
+        ));
     }
 }

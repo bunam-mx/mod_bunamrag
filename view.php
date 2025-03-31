@@ -75,9 +75,12 @@ if ($dxfgrade) {
 
 
     $sectionurlencode = urlencode($results[$page - 1]['section_name']);
-    $url = BUNAMRAGHUB . "/secciones/{$sectionurlencode}/{$path}";
-    $response = file_get_contents($url);
-    $pagecontent = json_decode($response, true);
+    $bunamraghub = get_config('mod_bunamrag', 'bunamraghub');
+    $url = $bunamraghub . "/secciones/{$sectionurlencode}/{$path}";
+    $response = @file_get_contents($url);
+    if ($response !== false) {
+        $pagecontent = json_decode($response, true);
+    }
 
     echo html_writer::start_tag('section', ['class' => 'row', 'id' => 'content']);
     echo html_writer::start_tag('article', ['class' => 'col-12']);
@@ -99,7 +102,7 @@ if ($dxfgrade) {
         }
         echo $pagecontent[0]['content'];
     } else {
-        echo '<p>Content not available.</p>';
+        echo html_writer::tag('p', get_string('bunamragnocontents', 'mod_bunamrag'), ['class' => 'text-muted']);
     }
     echo html_writer::end_tag('article');
     echo html_writer::end_tag('section');
@@ -130,7 +133,7 @@ if ($dxfgrade) {
             echo html_writer::start_div('row');
             echo html_writer::start_div('col-12 col-sm-10 col-lg-8 offset-sm-1 offset-lg-2 my-6');
             echo '<iframe
-                src="http://localhost/moodle/mod/hvp/embed.php?id=' . $activity->hvpid . '"
+                src="' . $CFG->wwwroot . '/mod/hvp/embed.php?id=' . $activity->hvpid . '"
                 width="1200"
                 frameborder="0"
                 allowfullscreen="allowfullscreen"
@@ -207,4 +210,3 @@ echo html_writer::script('
         }
     });
 ');
-

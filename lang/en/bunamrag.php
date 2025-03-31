@@ -81,3 +81,8 @@ $string['subcourseid'] = 'Subcourse';
 $string['subcourseid_help'] = 'Select the subcourse where the activity will be added';
 
 $string['viewitems'] = 'View Items';
+
+$string['api_settings'] = 'API Settings';
+$string['api_settings_desc'] = 'Configure the API connection settings for this plugin.';
+$string['bunamraghub'] = 'API URL';
+$string['bunamraghub_desc'] = 'Enter the URL of the API that this plugin connects to.';

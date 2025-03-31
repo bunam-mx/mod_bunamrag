@@ -21,8 +21,8 @@
  * @copyright   2025 Omar Terrazas Razo <terrazasrazo@gmail.com>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define('BUNAMRAGHUB', 'http://localhost:3333'); // URL for B@RAG Hub.
-/**
+
+ /**
  * Return if the plugin supports $feature.
  *
  * @param string $feature Constant representing the feature.

@@ -138,7 +138,7 @@ echo $OUTPUT->render_from_template('mod_bunamrag/modal', [
 ]);
 
 echo $OUTPUT->footer();
-$bunamraghub = BUNAMRAGHUB;
+$bunamraghub = get_config('mod_bunamrag', 'bunamraghub');
 echo html_writer::script("
     const id = {$id};
     const bunamragHub = '{$bunamraghub}';
