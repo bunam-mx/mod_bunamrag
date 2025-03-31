@@ -1,0 +1,7 @@
+.pluginicon {
+  fill: #353535; /* Color para la administración de plugins */
+}
+
+img.activityicon[title="B@RAG"], .modicon_bunamrag > img, .activity.bunamrag img {
+  filter: invert(66%) sepia(21%) saturate(2047%) hue-rotate(164deg) brightness(92%) contrast(85%);
+}

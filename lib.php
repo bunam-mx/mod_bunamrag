@@ -39,6 +39,12 @@ function bunamrag_supports($feature) {
     }
 }
 
+
+function mod_bunamrag_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = array()) {
+    global $PAGE;
+    $PAGE->requires->css('/mod/bunamrag/styles.css');
+}
+
 /**
  * Saves a new instance of the mod_bunamrag into the database.
  *
