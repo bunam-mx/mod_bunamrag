@@ -27,6 +27,7 @@
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="bunamrag" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="ragcoursecode" TYPE="char" LENGTH="4" NOTNULL="true" SEQUENCE="false" COMMENT="Code of the course into B@RAG Hub"/>
         <FIELD NAME="ragunit" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Name of the unit of the course into  B@RAG Hub."/>
         <FIELD NAME="ragunitid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="ID of the unit of the course into  B@RAG Hub."/>
         <FIELD NAME="ragtheme" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Name of the theme of the course into  B@RAG Hub."/>

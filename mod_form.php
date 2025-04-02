@@ -74,7 +74,7 @@ class mod_bunamrag_mod_form extends moodleform_mod {
 
         // Get B@RAG code course.
         $bunamraghub = get_config('mod_bunamrag', 'bunamraghub');
-        $url = $bunamraghub . '/asignaturas';
+        $url = $bunamraghub . '/subjects';
         $response = file_get_contents($url);
 
         if ($response === false) {

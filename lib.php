@@ -113,11 +113,18 @@ function bunamrag_update_instance(stdClass $data): bool {
 function bunamrag_delete_instance($id) {
     global $DB;
 
-    $exists = $DB->get_record('bunamrag', ['id' => $id]);
-    if (!$exists) {
+    // Verifica que la instancia exista.
+    if (!$bunamrag = $DB->get_record('bunamrag', ['id' => $id])) {
         return false;
     }
 
+    // Elimina los registros relacionados en la tabla bunamrag_items.
+    $DB->delete_records('bunamrag_items', ['bunamrag' => $id]);
+
+    // Elimina los registros relacionados en la tabla bunamrag_contents.
+    $DB->delete_records('bunamrag_contents', ['bunamrag' => $id]);
+
+    // Finalmente, elimina el registro principal de la tabla bunamrag.
     $DB->delete_records('bunamrag', ['id' => $id]);
 
     return true;

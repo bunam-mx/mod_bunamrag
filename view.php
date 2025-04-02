@@ -76,7 +76,7 @@ if ($dxfgrade) {
 
     $sectionurlencode = urlencode($results[$page - 1]['section_name']);
     $bunamraghub = get_config('mod_bunamrag', 'bunamraghub');
-    $url = $bunamraghub . "/secciones/{$sectionurlencode}/{$path}";
+    $url = $bunamraghub . "/sections/path/{$sectionurlencode}/{$path}";
     $response = @file_get_contents($url);
     if ($response !== false) {
         $pagecontent = json_decode($response, true);

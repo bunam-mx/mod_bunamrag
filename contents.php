@@ -228,7 +228,7 @@ const send_content = () => {
 
 // Function to fetch themes based on the selected unit.
 const getThemes = (bunamragHub, ragunitid) => {
-    fetch(`${bunamragHub}/temas/${ragunitid}`)
+    fetch(`${bunamragHub}/topics/unit/${ragunitid}`)
     .then((response) => response.json())
     .then((data) => {
         // Handle the response from the request.
@@ -260,7 +260,7 @@ const getThemes = (bunamragHub, ragunitid) => {
 
 // Function to fetch subthemes based on the selected theme.
 const getSubthemes = (bunamragHub, ragthemeid) => {
-    fetch(`${bunamragHub}/subtemas/${ragthemeid}`)
+    fetch(`${bunamragHub}/subtopics/topic/${ragthemeid}`)
     .then((response) => response.json())
     .then((data) => {
         // Handle the response from the request.
@@ -332,7 +332,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const select_ragsubthemesection = document.getElementById('id_ragsubthemesection');
         select_ragsubthemesection.innerHTML = '<option></option>'; // Clear existing options.
 
-        fetch(`${bunamragHub}/unidades/${ragcoursecode}`)
+        fetch(`${bunamragHub}/units/subject/${ragcoursecode}`)
             .then(response => response.json())
             .then(data => {
                 var select = document.getElementById("id_ragunitid");
