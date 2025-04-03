@@ -64,7 +64,6 @@ try {
     $record->timemodified = time();
 
     $result = $DB->insert_record('bunamrag_contents', $record);
-
     // Return a successful JSON response.
     echo json_encode([
         'success' => true,

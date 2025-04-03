@@ -156,3 +156,156 @@ echo $OUTPUT->render_from_template('mod_bunamrag/modal', [
 
 // Render the page footer.
 echo $OUTPUT->footer();
+?>
+
+<script>
+const send_activity = () => {
+    const urlActivitySubmit = 'ajax/handle_item_form.php';
+
+    const addActivitySubmit = document.getElementById('addActivitySubmit');
+    addActivitySubmit.addEventListener('click', function(e) {
+        e.preventDefault();
+
+        const data = {
+            bunamrag: document.querySelector('input[name="bunamrag"]').value,
+            bunamragcontent: document.querySelector('input[name="bunamragcontent"]').value,
+            hvpid: parseInt(document.querySelector('#id_hvpid option:checked').value), // Convertir a entero
+            hvptitle: document.querySelector('#id_hvpid option:checked').text,
+            sesskey: document.querySelector('input[name="sesskey"]').value,
+        };
+
+        fetch(urlActivitySubmit, {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams(data).toString()
+        })
+        .then(response => response.json())
+        .then(result => {
+            // Check if the response indicates success
+            if (result.success) {
+                // Trigger the close button to close the modal
+                document.getElementById('addActivityClose').click();
+
+                // Actualizar el contador de items
+                const contentCountSpan = document.getElementById('items_count');
+                const currentCount = parseInt(contentCountSpan.textContent);
+                contentCountSpan.textContent = currentCount + 1;
+
+                if(currentCount == 0) {
+                    // Ocultar el mensaje de que no hay contenidos
+                    document.getElementById('no_items').style.display = 'none';
+                }
+
+                // Crear un nuevo elemento con el título de la actividad
+                const activityItemsDiv = document.querySelector('.bunamrag-item-activities.row');
+                const newActivity = document.createElement('div');
+                newActivity.classList.add('bunamrag-item-activity', 'col-12', 'p-2', 'my-1', 'pr-6', 'border', 'rounded', 'rounded-1', 'd-flex', 'align-items-center');
+                newActivity.innerHTML = `
+                    <a href=${M.cfg.wwwroot}/mod/hvp/view.php?id=${result.hvpid} target="_blank">
+                    <h3 class="bunamrag-content-title h4">${result.hvptitle}</h3>
+                    </a>
+                    <div class="dropdown ms-auto">
+                        <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="icon fa fa-ellipsis-v fa-fw"></i>
+                        </a>
+                        <div class="dropdown-menu">
+                            <a href="#" class="dropdown-item">Edit</a>
+                            <a href="#" class="dropdown-item">Remove Item</a>
+                        </div>
+                    </div>
+                `;
+                activityItemsDiv.appendChild(newActivity);
+                // Reinitialize dropdowns for all elements
+                set_dropdowns();
+            } else {
+                alert('Error: ' + result.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Ocurrió un error al enviar el formulario.');
+        });
+    });
+};
+
+const get_activities = (courseid) => {
+    fetch(`ajax/get_subcourse_activities.php?courseid=${courseid}`)
+        .then(response => response.json())
+        .then(data => {
+            // Obtener el select con el id 'hvpid'
+            var select = document.getElementById("id_hvpid");
+
+            // Limpiar las opciones actuales del select
+            select.innerHTML = '<option value=""></option>';
+            if(data.length == 0) {
+                var option = document.createElement("option");
+                option.text = 'No subcourse activities available';
+                select.appendChild(option);
+                return;
+            } else {
+                // Agregar las nuevas opciones al select
+                data.forEach((item) => {
+                    var option = document.createElement("option");
+                    option.value = item.id;
+                    option.text = item.name;
+                    select.appendChild(option);
+                });
+            }
+        });
+};
+
+const set_dropdowns = () => {
+    // Remove existing event listeners
+    document.querySelectorAll('.dropdown-toggle').forEach(dropdown => {
+        const newDropdown = dropdown.cloneNode(true);
+        dropdown.parentNode.replaceChild(newDropdown, dropdown);
+    });
+
+    // Add new event listeners
+    document.querySelectorAll('.dropdown-toggle').forEach(dropdown => {
+        dropdown.addEventListener('click', function(event) {
+            event.preventDefault();
+            const menu = this.nextElementSibling;
+            if (menu.classList.contains('show')) {
+                menu.classList.remove('show');
+            } else {
+                document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+                menu.classList.add('show');
+            }
+        });
+    });
+
+    document.addEventListener('click', function(event) {
+        if (!event.target.matches('.dropdown-toggle')) {
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                menu.classList.remove('show');
+            });
+        }
+    });
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    set_dropdowns();
+
+    document.getElementById('addActivityBtn').addEventListener('click', function() {
+        const subcourseSelect = document.getElementById('id_subcourseid');
+        const hvpidSelect = document.getElementById('id_hvpid');
+
+        subcourseSelect.value = '';
+        hvpidSelect.innerHTML = '<option value=""></option>';
+        
+        subcourseSelect.addEventListener('change', function() {
+            var subcourse = subcourseSelect.options[subcourseSelect.selectedIndex];
+            console.log(subcourse.value);
+            get_activities(subcourse.value);
+        });        
+    });
+
+    send_activity();
+});
+
+</script>

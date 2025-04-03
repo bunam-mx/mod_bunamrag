@@ -204,11 +204,11 @@ const send_content = () => {
                     </a>
                     <div class="dropdown-menu">
                         <a href="${M.cfg.wwwroot}/mod/bunamrag/contents.php?id=${id}&contentid=${result.record_id}"
-                            class="dropdown-item">${get_string('edit')}</a>
+                            class="dropdown-item">Edit</a>
                         <a href="${M.cfg.wwwroot}/mod/bunamrag/contents.php?id=${id}&contentid=${result.record_id}"
-                            class="dropdown-item">${get_string('delete')}</a>
+                            class="dropdown-item">Delete</a>
                         <a href="${M.cfg.wwwroot}/mod/bunamrag/items.php?id=${id}&contentid=${result.record_id}"
-                            class="dropdown-item">${get_string('viewitems', 'mod_bunamrag')}</a>
+                            class="dropdown-item">View Items</a>
                     </div>
                     </div>
                 `;
