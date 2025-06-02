@@ -53,6 +53,41 @@ $PAGE->set_url('/mod/bunamrag/view.php', ['id' => $cm->id]);
 $PAGE->set_title(format_string($moduleinstance->name));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($modulecontext);
+
+// Configuración de MathJax antes de cargar el script.
+echo "<script>
+window.MathJax = {
+    loader: {
+        load: ['input/tex', 'output/chtml']
+    },
+    tex: {
+        inlineMath: [['\\\\(', '\\\\)']],
+        displayMath: [['\\\\[', '\\\\]']]
+    },
+    options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+};
+</script>";
+
+// Carga del script de MathJax.
+$PAGE->requires->js('/mod/bunamrag/amd/src/mathjax/3.2.2/es5/tex-mml-chtml.js', true);
+
+// Renderizado de MathJax después de que el DOM esté listo.
+echo html_writer::script('
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof MathJax !== "undefined" && MathJax.typesetPromise) {
+            MathJax.typesetPromise().then(function() {
+                console.log("MathJax rendering complete.");
+            }).catch(function(err) {
+                console.error("MathJax rendering failed: ", err);
+            });
+        } else {
+            console.error("MathJax is not loaded or not available.");
+        }
+    });
+');
+
 echo $OUTPUT->header();
 
 $dxfgrade = $DB->get_record('quiz_grades', ['quiz' => $moduleinstance->dxfid, 'userid' => $USER->id], '*', IGNORE_MISSING);
@@ -61,19 +96,17 @@ $results = [];
 echo html_writer::start_tag('main', ['id' => $moduleinstance->ragcoursecode, 'class' => 'container my-6']);
 
 if ($dxfgrade) {
+    $results = get_quiz_results_by_section_summary($moduleinstance->dxfid, $USER->id, $course->id);
     if (round($dxfgrade->grade, 2) == 10) {
-        $dxegrade = $DB->get_record('quiz_grades', ['quiz' => $moduleinstance->dxefid, 'userid' => $USER->id], '*', IGNORE_MISSING);
+        $dxegrade = $DB->get_record('quiz_grades', ['quiz' => $moduleinstance->dxeid, 'userid' => $USER->id], '*', IGNORE_MISSING);
         if (round($dxegrade->grade, 2) == 10) {
-            echo '<h3>Calificación: '.round($dxegrade->grade, 2).'</h3>';
+            $path = 'enriquecimiento';
         } else {
-            echo '<h3>Calificación: '.round($dxegrade->grade, 2).'</h3>';
+            $path = 'fundamental';
         }
     } else {
-        $results = get_quiz_results_by_section_summary($moduleinstance->dxfid, $USER->id, $course->id);
         $path = $results[$page - 1]['passed'] == 1 ? 'fundamental' : 'remedial';
     }
-
-
     $sectionurlencode = urlencode($results[$page - 1]['section_name']);
     $bunamraghub = get_config('mod_bunamrag', 'bunamraghub');
     $url = $bunamraghub . "/sections/path/{$sectionurlencode}/{$path}";
