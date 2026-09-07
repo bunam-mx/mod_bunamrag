@@ -24,6 +24,7 @@
 
 require(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/lib.php');
+require_once(__DIR__ . '/classes/local/trajectory_resolver.php');
 
 // Course module id.
 $id = optional_param('id', 0, PARAM_INT);
@@ -44,6 +45,7 @@ if ($id) {
 require_login($course, true, $cm);
 
 $modulecontext = context_module::instance($cm->id);
+require_capability('mod/bunamrag:view', $modulecontext);
 
 $event = \mod_bunamrag\event\course_module_viewed::create([
     'objectid' => $moduleinstance->id,
@@ -59,5 +61,102 @@ $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($modulecontext);
 
 echo $OUTPUT->header();
+
+if (!empty($moduleinstance->intro)) {
+    echo $OUTPUT->box(format_module_intro('bunamrag', $moduleinstance, $cm->id), 'generalbox mod_introbox', 'bunamragintro');
+}
+
+if (has_capability('mod/bunamrag:manage', $modulecontext)) {
+    echo $OUTPUT->single_button(
+        new moodle_url('/mod/bunamrag/manage.php', ['id' => $cm->id]),
+        get_string('manage', 'mod_bunamrag')
+    );
+}
+
+$themes = $DB->get_records('bunamrag_theme', ['bunamragid' => $moduleinstance->id], 'sortorder ASC, id ASC');
+
+if (empty($themes)) {
+    echo $OUTPUT->notification(get_string('nobunamraginstances', 'mod_bunamrag'), 'info');
+    echo $OUTPUT->footer();
+    exit;
+}
+
+$resolver = new \mod_bunamrag\local\trajectory_resolver();
+$trajectory = $resolver->resolve($moduleinstance, $USER->id);
+
+foreach ($themes as $theme) {
+    echo $OUTPUT->heading(format_string($theme->name), 3);
+
+    $subthemes = $DB->get_records('bunamrag_subtheme', ['themeid' => $theme->id], 'sortorder ASC, id ASC');
+    $codes = [];
+    foreach ($subthemes as $subtheme) {
+        $codes[$subtheme->code][$subtheme->level] = $subtheme;
+    }
+
+    foreach ($codes as $code => $levels) {
+        echo html_writer::tag('h4', format_string($code));
+
+        $resolved = $trajectory[$code] ?? null;
+
+        if ($resolved === null || $resolved->status === \mod_bunamrag\local\trajectory_resolver::STATUS_PENDING) {
+            $quizcmid = $resolved->quiz ?? 'dxfundamental';
+            $quizname = get_string(strtolower($quizcmid) === 'dxfundamental' ? 'dxfundamental' : 'dxenrichment', 'mod_bunamrag');
+            echo $OUTPUT->notification(get_string('diagnosticpending', 'mod_bunamrag', $quizname), 'info');
+            continue;
+        }
+
+        $level = $resolved->level;
+        if (!isset($levels[$level])) {
+            $level = isset($levels['fundamental']) ? 'fundamental' : (isset($levels['remedial']) ? 'remedial' : null);
+            if ($level !== null) {
+                echo $OUTPUT->notification(get_string('contentpending', 'mod_bunamrag'), 'warning');
+            }
+        }
+
+        if ($level === null || !isset($levels[$level])) {
+            echo $OUTPUT->notification(get_string('contentpending', 'mod_bunamrag'), 'warning');
+            continue;
+        }
+
+        $subtheme = $levels[$level];
+        $blocks = $DB->get_records('bunamrag_content', ['subthemeid' => $subtheme->id], 'sortorder ASC, id ASC');
+
+        foreach ($blocks as $block) {
+            switch ($block->blocktype) {
+                case 'textcontent':
+                    echo html_writer::div(
+                        format_text($block->content, $block->contentformat, ['context' => $modulecontext]),
+                        'bunamrag-content-text'
+                    );
+                    break;
+                case 'videourl':
+                    echo html_writer::tag('video', '', [
+                        'src' => $block->content,
+                        'controls' => 'controls',
+                        'class' => 'bunamrag-content-video',
+                    ]);
+                    break;
+                case 'podcastaudio':
+                    echo html_writer::tag('audio', '', [
+                        'src' => $block->content,
+                        'controls' => 'controls',
+                        'class' => 'bunamrag-content-audio',
+                    ]);
+                    break;
+                case 'h5p':
+                    echo html_writer::tag('iframe', '', [
+                        'src' => $block->content,
+                        'class' => 'bunamrag-content-h5p',
+                        'allowfullscreen' => 'allowfullscreen',
+                    ]);
+                    break;
+                case 'interactive':
+                default:
+                    echo $OUTPUT->notification(get_string('interactivepending', 'mod_bunamrag'), 'info');
+                    break;
+            }
+        }
+    }
+}
 
 echo $OUTPUT->footer();

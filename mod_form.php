@@ -38,7 +38,7 @@ class mod_bunamrag_mod_form extends moodleform_mod {
      * Defines forms elements
      */
     public function definition() {
-        global $CFG;
+        global $COURSE;
 
         $mform = $this->_form;
 
@@ -59,16 +59,30 @@ class mod_bunamrag_mod_form extends moodleform_mod {
         $mform->addHelpButton('name', 'bunamragname', 'mod_bunamrag');
 
         // Adding the standard "intro" and "introformat" fields.
-        if ($CFG->branch >= 29) {
-            $this->standard_intro_elements();
-        } else {
-            $this->add_intro_editor();
+        $this->standard_intro_elements();
+
+        // Diagnostic quizzes fieldset.
+        $mform->addElement('header', 'bunamragfieldset', get_string('bunamragfieldset', 'mod_bunamrag'));
+
+        $quizoptions = [0 => get_string('choosedxquiz', 'mod_bunamrag')];
+        $modinfo = get_fast_modinfo($COURSE);
+        foreach ($modinfo->get_instances_of('quiz') as $cm) {
+            if ($cm->uservisible || has_capability('moodle/course:manageactivities', $this->get_context())) {
+                $quizoptions[$cm->id] = format_string($cm->name);
+            }
         }
 
-        // Adding the rest of mod_bunamrag settings, spreading all them into this fieldset
-        // ... or adding more fieldsets ('header' elements) if needed for better logic.
-        $mform->addElement('static', 'label1', 'bunamragsettings', get_string('bunamragsettings', 'mod_bunamrag'));
-        $mform->addElement('header', 'bunamragfieldset', get_string('bunamragfieldset', 'mod_bunamrag'));
+        $mform->addElement('select', 'dxfundamental', get_string('dxfundamental', 'mod_bunamrag'), $quizoptions);
+        $mform->setType('dxfundamental', PARAM_INT);
+        $mform->addHelpButton('dxfundamental', 'dxfundamental', 'mod_bunamrag');
+
+        $mform->addElement('select', 'dxenrichment', get_string('dxenrichment', 'mod_bunamrag'), $quizoptions);
+        $mform->setType('dxenrichment', PARAM_INT);
+        $mform->addHelpButton('dxenrichment', 'dxenrichment', 'mod_bunamrag');
+
+        if (count($quizoptions) === 1) {
+            $mform->addElement('static', 'noquizzeswarning', '', get_string('noquizzesincourse', 'mod_bunamrag'));
+        }
 
         // Add standard elements.
         $this->standard_coursemodule_elements();

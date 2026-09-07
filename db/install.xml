@@ -1,22 +1,69 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/bunamrag/db" VERSION="20260905" COMMENT="XMLDB file for Moodle mod_bunamrag"
+<XMLDB PATH="mod/bunamrag/db" VERSION="20260907.01" COMMENT="XMLDB file for Moodle mod_bunamrag"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
-    <TABLE NAME="bunamrag" COMMENT="Stores the bunamrag activity module instances.">
+    <TABLE NAME="bunamrag" COMMENT="Stores the bunamrag activity module instances (a learning unit).">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="ID of the course this activity is part of."/>
         <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="The name of the activity module instance"/>
-        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Timestamp of when the instance was added to the course."/>
-        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Timestamp of when the instance was last modified."/>
         <FIELD NAME="intro" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Activity description."/>
         <FIELD NAME="introformat" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="The format of the intro field."/>
+        <FIELD NAME="dxfundamental" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Course module id of the DX Fundamental quiz."/>
+        <FIELD NAME="dxenrichment" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Course module id of the DX Enriquecimiento quiz."/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Timestamp of when the instance was added to the course."/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Timestamp of when the instance was last modified."/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="fk_course" TYPE="foreign" FIELDS="course" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="bunamrag_theme" COMMENT="Stores the themes (e.g. 1.1, 1.2, 1.3) of a bunamrag unit.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="bunamragid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="The bunamrag instance this theme belongs to."/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="theme name/number, e.g. 1.1"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_bunamragid" TYPE="foreign" FIELDS="bunamragid" REFTABLE="bunamrag" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="bunamrag_subtheme" COMMENT="Stores the subthemes (e.g. 1.1.1) of a theme, one row per level (remedial/fundamental/enriquecimiento).">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="themeid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="The theme this subtheme belongs to."/>
+        <FIELD NAME="code" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="Subtheme identifier shared across its level variants, e.g. 1.1.1"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="level" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="remedial | fundamental | enriquecimiento"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="dxfslot" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Question slot in the DX Fundamental quiz that maps to this subtheme."/>
+        <FIELD NAME="dxeslot" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Question slot in the DX Enriquecimiento quiz that maps to this subtheme."/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_themeid" TYPE="foreign" FIELDS="themeid" REFTABLE="bunamrag_theme" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="code" UNIQUE="false" FIELDS="code"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="bunamrag_content" COMMENT="Stores the content blocks of a subtheme-level.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="subthemeid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="The subtheme-level this content block belongs to."/>
+        <FIELD NAME="blocktype" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="textcontent | videourl | interactive | h5p | podcastaudio"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="content" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Generic payload: HTML for textcontent, JSON for interactive, URL for external videourl, etc."/>
+        <FIELD NAME="contentformat" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Format of the content field when it is rich text."/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_subthemeid" TYPE="foreign" FIELDS="subthemeid" REFTABLE="bunamrag_subtheme" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
   </TABLES>
