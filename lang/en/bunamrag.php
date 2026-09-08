@@ -37,6 +37,12 @@ $string['bunamragfieldset'] = 'Diagnostic quizzes';
 $string['pluginadministration'] = 'B@RAG Content administration';
 $string['nobunamraginstances'] = 'There are no B@RAG Content instances in this course.';
 
+// Admin settings.
+$string['bypassroles'] = 'Roles that bypass the diagnostics';
+$string['bypassroles_desc'] = 'Users who hold one of these roles in the activity (or a parent context) can view the content without having completed the DX Fundamental / DX Enriquecimiento quizzes. They get a level switcher instead, to preview remedial, fundamental or enriquecimiento content on demand.';
+$string['previewlevel'] = 'Preview level';
+$string['previewingas'] = 'Previewing as: {$a}';
+
 // Diagnostic quiz linking.
 $string['dxfundamental'] = 'DX Fundamental quiz';
 $string['dxfundamental_help'] = 'The quiz used to diagnose, per subtheme, whether the student should see the remedial or fundamental content, and whether the student is eligible to attempt the DX Enrichment quiz.';

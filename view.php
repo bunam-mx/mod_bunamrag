@@ -81,8 +81,44 @@ if (empty($themes)) {
     exit;
 }
 
-$resolver = new \mod_bunamrag\local\trajectory_resolver();
-$trajectory = $resolver->resolve($moduleinstance, $USER->id);
+// Roles configured in the plugin settings can preview the content directly,
+// picking the level themselves, without needing to have completed the DX
+// quizzes.
+$levels = ['remedial', 'fundamental', 'enriquecimiento'];
+$bypassroleids = array_filter(array_map('trim', explode(',', (string) get_config('mod_bunamrag', 'bypassroles'))));
+$canbypass = false;
+if (!empty($bypassroleids)) {
+    $userroleids = array_map(fn($ra) => (string) $ra->roleid, get_user_roles($modulecontext, $USER->id, true));
+    $canbypass = (bool) array_intersect($bypassroleids, $userroleids);
+}
+
+$previewlevel = null;
+if ($canbypass) {
+    $previewlevel = optional_param('previewlevel', 'fundamental', PARAM_ALPHA);
+    if (!in_array($previewlevel, $levels)) {
+        $previewlevel = 'fundamental';
+    }
+
+    $switcher = [];
+    foreach ($levels as $level) {
+        $label = get_string('level_' . $level, 'mod_bunamrag');
+        if ($level === $previewlevel) {
+            $switcher[] = html_writer::tag('strong', $label);
+        } else {
+            $switcher[] = html_writer::link(
+                new moodle_url($PAGE->url, ['previewlevel' => $level]),
+                $label
+            );
+        }
+    }
+    echo html_writer::div(
+        get_string('previewlevel', 'mod_bunamrag') . ': ' . implode(' | ', $switcher),
+        'bunamrag-level-switcher mb-3'
+    );
+} else {
+    $resolver = new \mod_bunamrag\local\trajectory_resolver();
+    $trajectory = $resolver->resolve($moduleinstance, $USER->id);
+}
 
 foreach ($themes as $theme) {
     echo $OUTPUT->heading(format_string($theme->name), 3);
@@ -93,32 +129,37 @@ foreach ($themes as $theme) {
         $codes[$subtheme->code][$subtheme->level] = $subtheme;
     }
 
-    foreach ($codes as $code => $levels) {
+    foreach ($codes as $code => $bylevel) {
         echo html_writer::tag('h4', format_string($code));
 
-        $resolved = $trajectory[$code] ?? null;
+        if ($canbypass) {
+            $level = $previewlevel;
+        } else {
+            $resolved = $trajectory[$code] ?? null;
 
-        if ($resolved === null || $resolved->status === \mod_bunamrag\local\trajectory_resolver::STATUS_PENDING) {
-            $quizcmid = $resolved->quiz ?? 'dxfundamental';
-            $quizname = get_string(strtolower($quizcmid) === 'dxfundamental' ? 'dxfundamental' : 'dxenrichment', 'mod_bunamrag');
-            echo $OUTPUT->notification(get_string('diagnosticpending', 'mod_bunamrag', $quizname), 'info');
-            continue;
+            if ($resolved === null || $resolved->status === \mod_bunamrag\local\trajectory_resolver::STATUS_PENDING) {
+                $quizcmid = $resolved->quiz ?? 'dxfundamental';
+                $quizname = get_string(strtolower($quizcmid) === 'dxfundamental' ? 'dxfundamental' : 'dxenrichment', 'mod_bunamrag');
+                echo $OUTPUT->notification(get_string('diagnosticpending', 'mod_bunamrag', $quizname), 'info');
+                continue;
+            }
+
+            $level = $resolved->level;
         }
 
-        $level = $resolved->level;
-        if (!isset($levels[$level])) {
-            $level = isset($levels['fundamental']) ? 'fundamental' : (isset($levels['remedial']) ? 'remedial' : null);
+        if (!isset($bylevel[$level])) {
+            $level = isset($bylevel['fundamental']) ? 'fundamental' : (isset($bylevel['remedial']) ? 'remedial' : null);
             if ($level !== null) {
                 echo $OUTPUT->notification(get_string('contentpending', 'mod_bunamrag'), 'warning');
             }
         }
 
-        if ($level === null || !isset($levels[$level])) {
+        if ($level === null || !isset($bylevel[$level])) {
             echo $OUTPUT->notification(get_string('contentpending', 'mod_bunamrag'), 'warning');
             continue;
         }
 
-        $subtheme = $levels[$level];
+        $subtheme = $bylevel[$level];
         $blocks = $DB->get_records('bunamrag_content', ['subthemeid' => $subtheme->id], 'sortorder ASC, id ASC');
 
         foreach ($blocks as $block) {
