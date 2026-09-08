@@ -39,6 +39,7 @@
         <FIELD NAME="themeid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="The theme this subtheme belongs to."/>
         <FIELD NAME="code" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="Subtheme identifier shared across its level variants, e.g. 1.1.1"/>
         <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="description" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="level" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="remedial | fundamental | enriquecimiento"/>
         <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="dxfslot" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Question slot in the DX Fundamental quiz that maps to this subtheme."/>

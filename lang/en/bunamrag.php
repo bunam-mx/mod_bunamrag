@@ -48,10 +48,19 @@ $string['noquizzesincourse'] = 'This course has no quiz activities yet. Add the 
 // Content hierarchy.
 $string['theme'] = 'Theme';
 $string['subtheme'] = 'Subtheme';
+$string['subthemecode'] = 'Subtheme code';
+$string['subthemecode_help'] = 'A short identifier shared by all level variants of the same subtheme, e.g. "1.1.1". Use the same code when adding the remedial, fundamental and enriquecimiento versions of a subtheme so they stay grouped together.';
+$string['description'] = 'Description';
 $string['level'] = 'Level';
 $string['level_remedial'] = 'Remedial';
 $string['level_fundamental'] = 'Fundamental';
 $string['level_enriquecimiento'] = 'Enriquecimiento';
+$string['dxfslot'] = 'DX Fundamental slot';
+$string['dxfslot_help'] = 'The question number (slot) in the DX Fundamental quiz that corresponds to this subtheme.';
+$string['dxeslot'] = 'DX Enrichment slot';
+$string['dxeslot_help'] = 'The question number (slot) in the DX Enrichment quiz that corresponds to this subtheme.';
+$string['subthemelevelexists'] = 'This subtheme already has a variant for that level. Edit the existing one instead.';
+$string['addlevel'] = 'Add this level';
 $string['blocktype'] = 'Block type';
 $string['blocktype_textcontent'] = 'Text';
 $string['blocktype_videourl'] = 'Video';
@@ -66,6 +75,17 @@ $string['diagnosticpending'] = 'You need to complete the {$a} diagnostic quiz be
 // Manage page.
 $string['manage'] = 'Manage content';
 $string['managebunamrag'] = 'Manage B@RAG Content: {$a}';
+$string['addtheme'] = 'Add theme';
+$string['edittheme'] = 'Edit theme';
+$string['confirmdeletetheme'] = 'Delete this theme and all of its subthemes and content? This cannot be undone.';
+$string['managesubthemes'] = 'Manage subthemes';
+$string['backtothemes'] = 'Back to themes';
+$string['addsubtheme'] = 'Add subtheme';
+$string['editsubtheme'] = 'Edit subtheme';
+$string['confirmdeletesubtheme'] = 'Delete this subtheme (all its levels and content)? This cannot be undone.';
+$string['managecontent'] = 'Manage content';
+$string['backtosubthemes'] = 'Back to subthemes';
+$string['content'] = 'Content';
 
 // Capabilities.
 $string['bunamrag:view'] = 'View B@RAG Content';

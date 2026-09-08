@@ -58,11 +58,17 @@ class trajectory_resolver {
     public function resolve(\stdClass $bunamrag, int $userid): array {
         global $DB;
 
+        // Group by code: the same subtema code exists as one row per level
+        // (remedial/fundamental/enriquecimiento), but dxfslot/dxeslot should
+        // be the same across those rows. MIN() picks up the value from
+        // whichever level row happens to have it filled in, and gives us a
+        // row id that is unique per code to use as the array key.
         $subthemes = $DB->get_records_sql(
-            "SELECT DISTINCT s.code, s.dxfslot, s.dxeslot
+            "SELECT MIN(s.id) AS id, s.code, MIN(s.dxfslot) AS dxfslot, MIN(s.dxeslot) AS dxeslot
                FROM {bunamrag_subtheme} s
                JOIN {bunamrag_theme} t ON t.id = s.themeid
-              WHERE t.bunamragid = :bunamragid",
+              WHERE t.bunamragid = :bunamragid
+           GROUP BY s.code",
             ['bunamragid' => $bunamrag->id]
         );
 
