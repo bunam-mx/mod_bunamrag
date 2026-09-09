@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_bunamrag';
-$plugin->release = '0.3.1';
-$plugin->version = 2026090801;
+$plugin->release = '0.3.3';
+$plugin->version = 2026090803;
 $plugin->requires = 2024010100;
 $plugin->maturity = MATURITY_ALPHA;

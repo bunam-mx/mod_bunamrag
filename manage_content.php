@@ -85,7 +85,7 @@ if ($action !== '' && confirm_sesskey()) {
                     'blocktype' => $blocktype,
                     'sortorder' => 0,
                     'content' => '',
-                    'contentformat' => FORMAT_HTML,
+                    'contentformat' => $blocktype === 'textcontent' ? FORMAT_MARKDOWN : FORMAT_HTML,
                 ]);
 
                 $ordered = $DB->get_records_select(
@@ -304,7 +304,16 @@ foreach ($blocks as $index => $block) {
         'action' => 'savecontent',
         'contentid' => $block->id,
     ]));
-    echo html_writer::tag('textarea', s($block->content), ['name' => 'content']);
+
+    if ($block->blocktype === 'textcontent') {
+        $sourceid = 'mdsource-' . $block->id;
+        echo html_writer::tag('textarea', s($block->content), ['name' => 'content', 'id' => $sourceid]);
+        $PAGE->requires->js(new moodle_url('/mod/bunamrag/thirdpartylibs/markdown-text-editor.min.js'));
+        $PAGE->requires->js_call_amd('mod_bunamrag/markdowneditor', 'init', [$sourceid]);
+    } else {
+        echo html_writer::tag('textarea', s($block->content), ['name' => 'content']);
+    }
+
     echo html_writer::tag('button', html_writer::empty_tag('img', [
         'src' => $OUTPUT->image_url('save-btn', 'mod_bunamrag'),
         'alt' => get_string('save'),

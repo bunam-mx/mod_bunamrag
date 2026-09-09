@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE libraries SYSTEM "https://moodle.org/dtd/thirdpartylibs.dtd">
+<libraries>
+  <library>
+    <location>thirdpartylibs/markdown-text-editor.min.js</location>
+    <name>markdown-text-editor</name>
+    <version>1.6.0</version>
+    <license>MIT</license>
+    <licenseversion></licenseversion>
+  </library>
+</libraries>
