@@ -117,6 +117,7 @@ if ($action !== '' && $action !== 'edit' && confirm_sesskey()) {
             break;
     }
 
+    bunamrag_resequence_dxfslots($moduleinstance->id);
     redirect($pageurl);
 }
 
@@ -140,8 +141,6 @@ if ($editingsubtheme) {
         'name' => $editingsubtheme->name,
         'description' => $editingsubtheme->description,
         'level' => $editingsubtheme->level,
-        'dxfslot' => $editingsubtheme->dxfslot,
-        'dxeslot' => $editingsubtheme->dxeslot,
     ]);
 } else {
     $mform->set_data([
@@ -175,8 +174,6 @@ if ($mform->is_cancelled()) {
             'name' => $data->name,
             'description' => $data->description,
             'level' => $data->level,
-            'dxfslot' => $data->dxfslot ?: null,
-            'dxeslot' => $data->dxeslot ?: null,
         ]);
     } else {
         // Reuse the sortorder of sibling levels of the same code, if any; otherwise append.
@@ -199,10 +196,10 @@ if ($mform->is_cancelled()) {
             'description' => $data->description,
             'level' => $data->level,
             'sortorder' => $sortorder,
-            'dxfslot' => $data->dxfslot ?: null,
-            'dxeslot' => $data->dxeslot ?: null,
         ]);
     }
+
+    bunamrag_resequence_dxfslots($moduleinstance->id);
     redirect($pageurl);
 }
 
@@ -217,6 +214,7 @@ $codes = array_keys($groups);
 $table = new html_table();
 $table->head = [
     get_string('subthemecode', 'mod_bunamrag'),
+    get_string('dxfslot', 'mod_bunamrag'),
     get_string('level_remedial', 'mod_bunamrag'),
     get_string('level_fundamental', 'mod_bunamrag'),
     get_string('level_enriquecimiento', 'mod_bunamrag'),
@@ -226,7 +224,8 @@ $table->head = [
 foreach ($groups as $code => $group) {
     $pos = array_search($code, $codes, true);
 
-    $row = [format_string($code)];
+    $dxfslot = reset($group['rows'])->dxfslot ?? '-';
+    $row = [format_string($code), $dxfslot];
 
     foreach ($levels as $level) {
         if (isset($group['rows'][$level])) {

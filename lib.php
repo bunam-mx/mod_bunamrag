@@ -99,7 +99,46 @@ function bunamrag_delete_instance($id) {
         $DB->delete_records_select('bunamrag_theme', "id $themeinsql", $themeparams);
     }
 
+    $DB->delete_records('bunamrag_trajectory', ['bunamragid' => $id]);
+    $DB->delete_records('bunamrag_log', ['bunamragid' => $id]);
     $DB->delete_records('bunamrag', ['id' => $id]);
 
     return true;
+}
+
+/**
+ * Recompute the DX Fundamental slot (dxfslot) of every subtheme of a
+ * bunamrag instance, based purely on the order its content is presented in:
+ * by theme order first, then by the subtheme's own order within that theme.
+ *
+ * All level variants (remedial/fundamental/enriquecimiento) of the same
+ * subtheme code share the same slot, since the DX Fundamental quiz has one
+ * question per subtheme, not per level.
+ *
+ * Call this after any change that could affect theme or subtheme ordering
+ * or existence (add/edit/delete/move of a theme or a subtheme).
+ *
+ * @param int $bunamragid
+ */
+function bunamrag_resequence_dxfslots(int $bunamragid): void {
+    global $DB;
+
+    $groups = $DB->get_records_sql(
+        "SELECT MIN(s.id) AS id, t.id AS themeid, s.code, MIN(t.sortorder) AS themesortorder,
+                MIN(s.sortorder) AS subthemesortorder
+           FROM {bunamrag_subtheme} s
+           JOIN {bunamrag_theme} t ON t.id = s.themeid
+          WHERE t.bunamragid = :bunamragid
+       GROUP BY t.id, s.code
+       ORDER BY themesortorder ASC, t.id ASC, subthemesortorder ASC",
+        ['bunamragid' => $bunamragid]
+    );
+
+    $slot = 1;
+    foreach ($groups as $group) {
+        $DB->set_field(
+            'bunamrag_subtheme', 'dxfslot', $slot, ['themeid' => $group->themeid, 'code' => $group->code]
+        );
+        $slot++;
+    }
 }

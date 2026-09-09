@@ -24,6 +24,7 @@
 
 require(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/lib.php');
+require_once(__DIR__ . '/classes/local/trajectory_resolver.php');
 
 // Course module id.
 $id = optional_param('id', 0, PARAM_INT);
@@ -80,11 +81,65 @@ if ($themecount === 0) {
     exit;
 }
 
-// Roles configured in the plugin settings can preview any level directly,
-// without needing to have completed the DX quizzes. Everyone else sees the
-// fundamental level for now: resolving a personalized trajectory per
-// student is paused until the DX quizzes are wired up to this view.
+/**
+ * Render the content blocks of a subtheme.
+ *
+ * @param \stdClass $subtheme
+ * @param \context $modulecontext
+ */
+function bunamrag_render_subtheme_blocks(\stdClass $subtheme, \context $modulecontext): void {
+    global $DB, $OUTPUT;
+
+    echo $OUTPUT->heading(format_string($subtheme->themename), 3);
+    echo html_writer::tag('h4', format_string($subtheme->code) . ' — ' . format_string($subtheme->name));
+
+    if (!empty($subtheme->description)) {
+        echo html_writer::div(format_string($subtheme->description), 'text-muted mb-3');
+    }
+
+    $blocks = $DB->get_records('bunamrag_content', ['subthemeid' => $subtheme->id], 'sortorder ASC, id ASC');
+
+    foreach ($blocks as $block) {
+        switch ($block->blocktype) {
+            case 'textcontent':
+                echo html_writer::div(
+                    format_text($block->content, $block->contentformat, ['context' => $modulecontext]),
+                    'bunamrag-content-text'
+                );
+                break;
+            case 'videourl':
+                echo html_writer::tag('video', '', [
+                    'src' => $block->content,
+                    'controls' => 'controls',
+                    'class' => 'bunamrag-content-video',
+                ]);
+                break;
+            case 'podcastaudio':
+                echo html_writer::tag('audio', '', [
+                    'src' => $block->content,
+                    'controls' => 'controls',
+                    'class' => 'bunamrag-content-audio',
+                ]);
+                break;
+            case 'h5p':
+                echo html_writer::tag('iframe', '', [
+                    'src' => $block->content,
+                    'class' => 'bunamrag-content-h5p',
+                    'allowfullscreen' => 'allowfullscreen',
+                ]);
+                break;
+            case 'interactive':
+            default:
+                echo $OUTPUT->notification(get_string('interactivepending', 'mod_bunamrag'), 'info');
+                break;
+        }
+    }
+}
+
 $levels = ['remedial', 'fundamental', 'enriquecimiento'];
+
+// Roles configured in the plugin settings can preview any level directly,
+// without needing to have completed the DX quizzes.
 $bypassroleids = array_filter(array_map('trim', explode(',', (string) get_config('mod_bunamrag', 'bypassroles'))));
 $canbypass = false;
 if (!empty($bypassroleids)) {
@@ -92,8 +147,9 @@ if (!empty($bypassroleids)) {
     $canbypass = (bool) array_intersect($bypassroleids, $userroleids);
 }
 
-$level = 'fundamental';
 if ($canbypass) {
+    // Preview mode: pick a level and page through every subtheme published
+    // at that level, in theme order then subtheme order.
     $level = optional_param('previewlevel', 'fundamental', PARAM_ALPHA);
     if (!in_array($level, $levels)) {
         $level = 'fundamental';
@@ -115,80 +171,168 @@ if ($canbypass) {
         get_string('previewlevel', 'mod_bunamrag') . ': ' . implode(' | ', $switcher),
         'bunamrag-level-switcher mb-3'
     );
+
+    $subthemes = array_values($DB->get_records_sql(
+        "SELECT s.*, t.name AS themename
+           FROM {bunamrag_subtheme} s
+           JOIN {bunamrag_theme} t ON t.id = s.themeid
+          WHERE t.bunamragid = :bunamragid AND s.level = :level
+       ORDER BY t.sortorder ASC, t.id ASC, s.sortorder ASC, s.id ASC",
+        ['bunamragid' => $moduleinstance->id, 'level' => $level]
+    ));
+
+    $total = count($subthemes);
+    if ($total === 0) {
+        echo $OUTPUT->notification(get_string('contentpending', 'mod_bunamrag'), 'warning');
+        echo $OUTPUT->footer();
+        exit;
+    }
+
+    $page = optional_param('page', 0, PARAM_INT);
+    $page = max(0, min($page, $total - 1));
+
+    bunamrag_render_subtheme_blocks($subthemes[$page], $modulecontext);
+
+    $pagerurl = new moodle_url($PAGE->url, ['previewlevel' => $level]);
+    echo $OUTPUT->paging_bar($total, $page, 1, $pagerurl);
+
+    echo $OUTPUT->footer();
+    exit;
 }
 
-// All the subthemes of this level, in the order they should be presented:
-// by theme first, then by the subtheme's own order within that theme.
-$subthemes = array_values($DB->get_records_sql(
+// Everyone else gets their personalized trajectory, based on their DX
+// Fundamental / DX Enriquecimiento results.
+$resolver = new \mod_bunamrag\local\trajectory_resolver();
+$trajectory = $resolver->resolve_and_cache($moduleinstance, $USER->id);
+
+$pending = empty($trajectory);
+foreach ($trajectory as $status) {
+    if ($status->status === \mod_bunamrag\local\trajectory_resolver::STATUS_PENDING) {
+        $pending = true;
+        break;
+    }
+}
+
+if ($pending) {
+    echo $OUTPUT->notification(
+        get_string('diagnosticpending', 'mod_bunamrag', get_string('dxfundamental', 'mod_bunamrag')),
+        'info'
+    );
+
+    $dxfcm = !empty($moduleinstance->dxfundamental) ? get_coursemodule_from_id('quiz', $moduleinstance->dxfundamental) : null;
+    if ($dxfcm) {
+        echo $OUTPUT->single_button(
+            new moodle_url('/mod/quiz/view.php', ['id' => $dxfcm->id]),
+            get_string('dxfundamental', 'mod_bunamrag'),
+            'get',
+            ['type' => single_button::BUTTON_PRIMARY]
+        );
+    }
+
+    echo $OUTPUT->footer();
+    exit;
+}
+
+// Build the ordered list of subthemes to page through: one per code, in
+// theme order then subtheme order, showing the level resolved for this
+// student (falling back to fundamental, then remedial, if that particular
+// level was not published for this subtheme yet).
+$allrows = $DB->get_records_sql(
     "SELECT s.*, t.name AS themename
        FROM {bunamrag_subtheme} s
        JOIN {bunamrag_theme} t ON t.id = s.themeid
-      WHERE t.bunamragid = :bunamragid AND s.level = :level
+      WHERE t.bunamragid = :bunamragid
    ORDER BY t.sortorder ASC, t.id ASC, s.sortorder ASC, s.id ASC",
-    ['bunamragid' => $moduleinstance->id, 'level' => $level]
-));
+    ['bunamragid' => $moduleinstance->id]
+);
 
-$total = count($subthemes);
+$bycode = [];
+$order = [];
+foreach ($allrows as $row) {
+    if (!isset($bycode[$row->code])) {
+        $bycode[$row->code] = [];
+        $order[] = $row->code;
+    }
+    $bycode[$row->code][$row->level] = $row;
+}
 
+$pagelist = [];
+foreach ($order as $code) {
+    $bylevel = $bycode[$code];
+    $level = $trajectory[$code]->level ?? 'fundamental';
+
+    if (!isset($bylevel[$level])) {
+        if (isset($bylevel['fundamental'])) {
+            $level = 'fundamental';
+        } else if (isset($bylevel['remedial'])) {
+            $level = 'remedial';
+        } else {
+            $level = null;
+        }
+    }
+
+    if ($level !== null && isset($bylevel[$level])) {
+        $pagelist[] = $bylevel[$level];
+    }
+}
+
+$total = count($pagelist);
 if ($total === 0) {
     echo $OUTPUT->notification(get_string('contentpending', 'mod_bunamrag'), 'warning');
     echo $OUTPUT->footer();
     exit;
 }
 
-$page = optional_param('page', 0, PARAM_INT);
-$page = max(0, min($page, $total - 1));
-$subtheme = $subthemes[$page];
+$pageparam = optional_param('page', null, PARAM_INT);
 
-echo $OUTPUT->heading(format_string($subtheme->themename), 3);
-echo html_writer::tag('h4', format_string($subtheme->code) . ' — ' . format_string($subtheme->name));
+if ($pageparam === null) {
+    $lastvisit = $DB->get_records('bunamrag_log', ['bunamragid' => $moduleinstance->id, 'userid' => $USER->id], 'timecreated DESC', 'id, subthemeid', 0, 1);
+    $lastvisit = reset($lastvisit);
 
-if (!empty($subtheme->description)) {
-    echo html_writer::div(format_string($subtheme->description), 'text-muted mb-3');
-}
+    $resumeindex = null;
+    if ($lastvisit) {
+        foreach ($pagelist as $index => $subtheme) {
+            if ((int) $subtheme->id === (int) $lastvisit->subthemeid) {
+                $resumeindex = $index;
+                break;
+            }
+        }
+    }
 
-$blocks = $DB->get_records('bunamrag_content', ['subthemeid' => $subtheme->id], 'sortorder ASC, id ASC');
-
-foreach ($blocks as $block) {
-    switch ($block->blocktype) {
-        case 'textcontent':
-            echo html_writer::div(
-                format_text($block->content, $block->contentformat, ['context' => $modulecontext]),
-                'bunamrag-content-text'
-            );
-            break;
-        case 'videourl':
-            echo html_writer::tag('video', '', [
-                'src' => $block->content,
-                'controls' => 'controls',
-                'class' => 'bunamrag-content-video',
-            ]);
-            break;
-        case 'podcastaudio':
-            echo html_writer::tag('audio', '', [
-                'src' => $block->content,
-                'controls' => 'controls',
-                'class' => 'bunamrag-content-audio',
-            ]);
-            break;
-        case 'h5p':
-            echo html_writer::tag('iframe', '', [
-                'src' => $block->content,
-                'class' => 'bunamrag-content-h5p',
-                'allowfullscreen' => 'allowfullscreen',
-            ]);
-            break;
-        case 'interactive':
-        default:
-            echo $OUTPUT->notification(get_string('interactivepending', 'mod_bunamrag'), 'info');
-            break;
+    if ($resumeindex !== null) {
+        echo $OUTPUT->box_start('bunamrag-resume-choice');
+        echo html_writer::tag('p', get_string('resumeprompt', 'mod_bunamrag'));
+        echo $OUTPUT->single_button(
+            new moodle_url($PAGE->url, ['page' => $resumeindex]),
+            get_string('resumecontinue', 'mod_bunamrag'),
+            'get',
+            ['type' => single_button::BUTTON_PRIMARY]
+        );
+        echo ' ';
+        echo $OUTPUT->single_button(
+            new moodle_url($PAGE->url, ['page' => 0]),
+            get_string('resumerestart', 'mod_bunamrag'),
+            'get'
+        );
+        echo $OUTPUT->box_end();
+        echo $OUTPUT->footer();
+        exit;
     }
 }
 
+$page = max(0, min($pageparam ?? 0, $total - 1));
+$subtheme = $pagelist[$page];
+
+$DB->insert_record('bunamrag_log', (object) [
+    'bunamragid' => $moduleinstance->id,
+    'userid' => $USER->id,
+    'subthemeid' => $subtheme->id,
+    'timecreated' => time(),
+]);
+
+bunamrag_render_subtheme_blocks($subtheme, $modulecontext);
+
 $pagerurl = new moodle_url($PAGE->url);
-if ($canbypass) {
-    $pagerurl->param('previewlevel', $level);
-}
 echo $OUTPUT->paging_bar($total, $page, 1, $pagerurl);
 
 echo $OUTPUT->footer();

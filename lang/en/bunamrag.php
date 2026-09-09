@@ -41,7 +41,6 @@ $string['nobunamraginstances'] = 'There are no B@RAG Content instances in this c
 $string['bypassroles'] = 'Roles that bypass the diagnostics';
 $string['bypassroles_desc'] = 'Users who hold one of these roles in the activity (or a parent context) can view the content without having completed the DX Fundamental / DX Enriquecimiento quizzes. They get a level switcher instead, to preview remedial, fundamental or enriquecimiento content on demand.';
 $string['previewlevel'] = 'Preview level';
-$string['previewingas'] = 'Previewing as: {$a}';
 
 // Diagnostic quiz linking.
 $string['dxfundamental'] = 'DX Fundamental quiz';
@@ -62,9 +61,7 @@ $string['level_remedial'] = 'Remedial';
 $string['level_fundamental'] = 'Fundamental';
 $string['level_enriquecimiento'] = 'Enriquecimiento';
 $string['dxfslot'] = 'DX Fundamental slot';
-$string['dxfslot_help'] = 'The question number (slot) in the DX Fundamental quiz that corresponds to this subtheme.';
-$string['dxeslot'] = 'DX Enrichment slot';
-$string['dxeslot_help'] = 'The question number (slot) in the DX Enrichment quiz that corresponds to this subtheme.';
+$string['dxfslot_help'] = 'The question number (slot) in the DX Fundamental quiz that corresponds to this subtheme. Computed automatically from the order the content is presented in.';
 $string['subthemelevelexists'] = 'This subtheme already has a variant for that level. Edit the existing one instead.';
 $string['addlevel'] = 'Add this level';
 $string['blocktype'] = 'Block type';
@@ -77,6 +74,9 @@ $string['interactivepending'] = 'This interactive content is coming soon.';
 $string['addcontent'] = 'Add content block';
 $string['contentpending'] = 'The content for this level is not published yet.';
 $string['diagnosticpending'] = 'You need to complete the {$a} diagnostic quiz before this content is available.';
+$string['resumeprompt'] = 'You already started viewing this content.';
+$string['resumecontinue'] = 'Continue where I left off';
+$string['resumerestart'] = 'Start from the beginning';
 
 // Manage page.
 $string['manage'] = 'Manage content';
@@ -102,4 +102,13 @@ $string['bunamrag:addinstance'] = 'Add a new B@RAG Content activity';
 $string['eventcoursemoduleviewed'] = 'Course module viewed';
 $string['eventcoursemoduleinstancelistviewed'] = 'Course module instance list viewed';
 
-$string['privacy:metadata'] = 'The B@RAG Content plugin does not store any personal data of its own; the diagnostic results it reads belong to the linked quiz activities.';
+$string['privacy:metadata:core_question'] = 'The B@RAG Content activity reads DX Fundamental and DX Enriquecimiento quiz attempt data to calculate each student\'s trajectory, but does not modify it.';
+$string['privacy:metadata:bunamrag_trajectory'] = 'The personalized level (per subtheme) resolved for a student, cached so it does not need to be recalculated on every visit.';
+$string['privacy:metadata:bunamrag_trajectory:userid'] = 'The ID of the user the trajectory was resolved for.';
+$string['privacy:metadata:bunamrag_trajectory:code'] = 'The subtheme code this trajectory entry applies to.';
+$string['privacy:metadata:bunamrag_trajectory:level'] = 'The level (remedial, fundamental or enriquecimiento) resolved for this subtheme.';
+$string['privacy:metadata:bunamrag_trajectory:timecreated'] = 'The time the trajectory was resolved.';
+$string['privacy:metadata:bunamrag_log'] = 'A log of the subthemes a student has viewed, used to let them resume where they left off.';
+$string['privacy:metadata:bunamrag_log:userid'] = 'The ID of the user who viewed the subtheme.';
+$string['privacy:metadata:bunamrag_log:subthemeid'] = 'The subtheme that was viewed.';
+$string['privacy:metadata:bunamrag_log:timecreated'] = 'The time the subtheme was viewed.';

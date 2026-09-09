@@ -115,5 +115,72 @@ function xmldb_bunamrag_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026090703, 'bunamrag');
     }
 
+    if ($oldversion < 2026090800) {
+        // The DX Enriquecimiento slot is not used to resolve the trajectory:
+        // enriquecimiento is an all-or-nothing unlock based on the overall
+        // DX Enriquecimiento grade, not a per-subtheme mapping.
+        $table = new xmldb_table('bunamrag_subtheme');
+        $field = new xmldb_field('dxeslot', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'dxfslot');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+
+        // Define table bunamrag_trajectory to be created.
+        $table = new xmldb_table('bunamrag_trajectory');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('bunamragid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('code', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('level', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('fk_bunamragid', XMLDB_KEY_FOREIGN, ['bunamragid'], 'bunamrag', ['id']);
+        $table->add_key('fk_userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+
+        $table->add_index('bunamragid_userid_code', XMLDB_INDEX_UNIQUE, ['bunamragid', 'userid', 'code']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Define table bunamrag_log to be created.
+        $table = new xmldb_table('bunamrag_log');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('bunamragid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('subthemeid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('fk_bunamragid', XMLDB_KEY_FOREIGN, ['bunamragid'], 'bunamrag', ['id']);
+        $table->add_key('fk_userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+        $table->add_key('fk_subthemeid', XMLDB_KEY_FOREIGN, ['subthemeid'], 'bunamrag_subtheme', ['id']);
+
+        $table->add_index('bunamragid_userid_time', XMLDB_INDEX_NOTUNIQUE, ['bunamragid', 'userid', 'timecreated']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Bunamrag savepoint reached.
+        upgrade_mod_savepoint(true, 2026090800, 'bunamrag');
+    }
+
+    if ($oldversion < 2026090801) {
+        // Some sites reached a later version without ever running the
+        // 2026090703 step (e.g. because $plugin->version was bumped before
+        // upgrade.php had that step). Re-check it here unconditionally so
+        // those sites catch up too.
+        $table = new xmldb_table('bunamrag_subtheme');
+        $field = new xmldb_field('description', XMLDB_TYPE_TEXT, null, null, null, null, null, 'name');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Bunamrag savepoint reached.
+        upgrade_mod_savepoint(true, 2026090801, 'bunamrag');
+    }
+
     return true;
 }

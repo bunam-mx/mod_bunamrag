@@ -70,13 +70,8 @@ class subtheme_form extends \moodleform {
         ];
         $mform->addElement('select', 'level', get_string('level', 'mod_bunamrag'), $levels);
 
-        $mform->addElement('text', 'dxfslot', get_string('dxfslot', 'mod_bunamrag'), ['size' => '5']);
-        $mform->setType('dxfslot', PARAM_INT);
-        $mform->addHelpButton('dxfslot', 'dxfslot', 'mod_bunamrag');
-
-        $mform->addElement('text', 'dxeslot', get_string('dxeslot', 'mod_bunamrag'), ['size' => '5']);
-        $mform->setType('dxeslot', PARAM_INT);
-        $mform->addHelpButton('dxeslot', 'dxeslot', 'mod_bunamrag');
+        // dxfslot is not editable here: it is auto-computed from the order
+        // the content is presented in (see bunamrag_resequence_dxfslots()).
 
         $this->add_action_buttons();
     }

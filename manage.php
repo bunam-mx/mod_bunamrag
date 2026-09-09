@@ -78,6 +78,7 @@ if ($action !== '' && $action !== 'edit' && confirm_sesskey()) {
             break;
     }
 
+    bunamrag_resequence_dxfslots($moduleinstance->id);
     redirect($pageurl);
 }
 
