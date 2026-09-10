@@ -15,9 +15,9 @@
 
 /**
  * Attaches the vendored markdown-text-editor library (thirdpartylibs/) to a
- * mod_bunamrag textcontent block's textarea. The library takes over the
- * textarea in place and keeps its value in sync, so the surrounding
- * moodleform submit needs no changes.
+ * mod_bunamrag textarea (textcontent blocks, or a videourl block's
+ * transcript). The library takes over the textarea in place and keeps its
+ * value in sync, so the surrounding moodleform submit needs no changes.
  *
  * @module      mod_bunamrag/markdowneditor
  * @copyright   2026 Omar Terrazas Razo <terrazasrazo@gmail.com>
@@ -33,15 +33,16 @@ define([], function() {
      * be available, then instantiate the editor on it.
      *
      * @param {String} elementId id of the <textarea> to enhance.
+     * @param {Object} options options passed through to MarkdownEditor (e.g. toolbar).
      * @param {Number} attemptsleft remaining polling attempts.
      */
-    var attach = function(elementId, attemptsleft) {
+    var attach = function(elementId, options, attemptsleft) {
         var el = document.getElementById(elementId);
 
         if (el && window.MarkdownEditor) {
             if (!el.dataset.bunamragMdEditorReady) {
                 el.dataset.bunamragMdEditorReady = '1';
-                new window.MarkdownEditor('#' + elementId);
+                new window.MarkdownEditor('#' + elementId, options);
             }
             return;
         }
@@ -52,7 +53,7 @@ define([], function() {
         }
 
         window.setTimeout(function() {
-            attach(elementId, attemptsleft - 1);
+            attach(elementId, options, attemptsleft - 1);
         }, POLL_MS);
     };
 
@@ -60,9 +61,10 @@ define([], function() {
      * Initialise the markdown editor on the given textarea.
      *
      * @param {String} elementId id of the <textarea> to enhance.
+     * @param {Object} options optional MarkdownEditor options (e.g. {toolbar: [...]}).
      */
-    var init = function(elementId) {
-        attach(elementId, MAX_ATTEMPTS);
+    var init = function(elementId, options) {
+        attach(elementId, options || {}, MAX_ATTEMPTS);
     };
 
     return {

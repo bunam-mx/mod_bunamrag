@@ -90,8 +90,11 @@ if ($themecount === 0) {
 function bunamrag_render_subtheme_blocks(\stdClass $subtheme, \context $modulecontext): void {
     global $DB, $OUTPUT;
 
-    echo $OUTPUT->heading(format_string($subtheme->themename), 3);
-    echo html_writer::tag('h4', format_string($subtheme->code) . ' — ' . format_string($subtheme->name));
+    echo html_writer::tag('h3', format_string($subtheme->themename), ['class' => 'h4 mb-2 text-muted']);
+    echo html_writer::tag('h4', format_string($subtheme->name), [
+        'class' => 'h5 mb-3 text-muted',
+        'style' => 'border-bottom: 1px solid #dee2e6; padding-bottom: 0.5rem;',
+    ]);
 
     if (!empty($subtheme->description)) {
         echo html_writer::div(format_string($subtheme->description), 'text-muted mb-3');
@@ -99,20 +102,78 @@ function bunamrag_render_subtheme_blocks(\stdClass $subtheme, \context $moduleco
 
     $blocks = $DB->get_records('bunamrag_content', ['subthemeid' => $subtheme->id], 'sortorder ASC, id ASC');
 
+    echo html_writer::start_tag('section', ['class' => 'container']);
+
     foreach ($blocks as $block) {
         switch ($block->blocktype) {
             case 'textcontent':
+                echo html_writer::start_tag('article', ['class' => 'p-2 my-5']);
                 echo html_writer::div(
                     format_text($block->content, $block->contentformat, ['context' => $modulecontext]),
-                    'bunamrag-content-text'
+                    'bunamrag-content-text my-5'
                 );
+                echo html_writer::end_tag('article');
                 break;
             case 'videourl':
-                echo html_writer::tag('video', '', [
-                    'src' => $block->content,
-                    'controls' => 'controls',
-                    'class' => 'bunamrag-content-video',
-                ]);
+                echo html_writer::start_tag('article', ['class' => 'row']);
+                echo html_writer::start_tag('div', ['class' => 'col-10 mx-auto my-5']);
+                $youtubeid = bunamrag_youtube_video_id($block->content);
+                if ($youtubeid !== null) {
+                    echo html_writer::div(
+                        html_writer::tag('iframe', '', [
+                            'src' => 'https://www.youtube.com/embed/' . $youtubeid . '?rel=0',
+                            'title' => get_string('blocktype_videourl', 'mod_bunamrag'),
+                            'allowfullscreen' => 'allowfullscreen',
+                        ]),
+                        'embed-responsive embed-responsive-16by9'
+                    );
+                } else {
+                    echo html_writer::tag('video', '', [
+                        'src' => $block->content,
+                        'controls' => 'controls',
+                        'class' => 'bunamrag-content-video',
+                    ]);
+                }
+
+                if (!empty($block->transcript)) {
+                    $modalid = 'bunamrag-transcript-' . $block->id;
+
+                    echo html_writer::tag('button', html_writer::empty_tag('img', [
+                        'src' => $OUTPUT->image_url('transcript-btn', 'mod_bunamrag'),
+                        'alt' => get_string('transcript', 'mod_bunamrag'),
+                        'title' => get_string('transcript', 'mod_bunamrag'),
+                    ]) . ' ' . get_string('transcript', 'mod_bunamrag'), [
+                        'type' => 'button',
+                        'class' => 'btn btn-link bunamrag-transcript-btn mt-2',
+                        'data-toggle' => 'modal',
+                        'data-target' => '#' . $modalid,
+                    ]);
+
+                    echo html_writer::start_div('modal fade', ['id' => $modalid, 'tabindex' => '-1', 'role' => 'dialog']);
+                    echo html_writer::start_div('modal-dialog modal-dialog-scrollable', ['role' => 'document']);
+                    echo html_writer::start_div('modal-content');
+
+                    echo html_writer::start_div('modal-header');
+                    echo html_writer::tag('h5', get_string('transcript', 'mod_bunamrag'), ['class' => 'modal-title']);
+                    echo html_writer::tag('button', html_writer::tag('span', '&times;', ['aria-hidden' => 'true']), [
+                        'type' => 'button',
+                        'class' => 'close',
+                        'data-dismiss' => 'modal',
+                        'aria-label' => get_string('closebuttontitle'),
+                    ]);
+                    echo html_writer::end_div();
+
+                    echo html_writer::div(
+                        format_text($block->transcript, FORMAT_MARKDOWN, ['context' => $modulecontext]),
+                        'modal-body'
+                    );
+
+                    echo html_writer::end_div();
+                    echo html_writer::end_div();
+                    echo html_writer::end_div();
+                }
+                echo html_writer::end_tag('div');
+                echo html_writer::end_tag('article');
                 break;
             case 'podcastaudio':
                 echo html_writer::tag('audio', '', [
@@ -134,6 +195,8 @@ function bunamrag_render_subtheme_blocks(\stdClass $subtheme, \context $moduleco
                 break;
         }
     }
+
+    echo html_writer::end_tag('section');
 }
 
 $levels = ['remedial', 'fundamental', 'enriquecimiento'];

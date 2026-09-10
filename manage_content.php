@@ -86,6 +86,7 @@ if ($action !== '' && confirm_sesskey()) {
                     'sortorder' => 0,
                     'content' => '',
                     'contentformat' => $blocktype === 'textcontent' ? FORMAT_MARKDOWN : FORMAT_HTML,
+                    'transcript' => '',
                 ]);
 
                 $ordered = $DB->get_records_select(
@@ -102,7 +103,11 @@ if ($action !== '' && confirm_sesskey()) {
         case 'savecontent':
             $contentid = required_param('contentid', PARAM_INT);
             $content = required_param('content', PARAM_RAW);
+            $transcript = optional_param('transcript', null, PARAM_RAW);
             $DB->set_field('bunamrag_content', 'content', $content, ['id' => $contentid, 'subthemeid' => $subtheme->id]);
+            if ($transcript !== null) {
+                $DB->set_field('bunamrag_content', 'transcript', $transcript, ['id' => $contentid, 'subthemeid' => $subtheme->id]);
+            }
             break;
 
         case 'moveup':
@@ -310,6 +315,31 @@ foreach ($blocks as $index => $block) {
         echo html_writer::tag('textarea', s($block->content), ['name' => 'content', 'id' => $sourceid]);
         $PAGE->requires->js(new moodle_url('/mod/bunamrag/thirdpartylibs/markdown-text-editor.min.js'));
         $PAGE->requires->js_call_amd('mod_bunamrag/markdowneditor', 'init', [$sourceid]);
+    } else if ($block->blocktype === 'videourl') {
+        $urlid = 'url-' . $block->id;
+        $transcriptid = 'mdtranscript-' . $block->id;
+
+        echo html_writer::tag('label', get_string('videourl', 'mod_bunamrag'), [
+            'for' => $urlid, 'class' => 'd-block small text-muted mb-1',
+        ]);
+        echo html_writer::empty_tag('input', [
+            'type' => 'url',
+            'name' => 'content',
+            'id' => $urlid,
+            'value' => $block->content,
+            'class' => 'form-control mb-3',
+            'placeholder' => 'https://www.youtube.com/watch?v=...',
+        ]);
+
+        echo html_writer::tag('label', get_string('transcript', 'mod_bunamrag'), [
+            'for' => $transcriptid, 'class' => 'd-block small text-muted mb-1',
+        ]);
+        echo html_writer::tag('textarea', s($block->transcript), ['name' => 'transcript', 'id' => $transcriptid]);
+        $PAGE->requires->js(new moodle_url('/mod/bunamrag/thirdpartylibs/markdown-text-editor.min.js'));
+        $PAGE->requires->js_call_amd('mod_bunamrag/markdowneditor', 'init', [
+            $transcriptid,
+            ['toolbar' => ['heading', 'bold', 'italic', 'ul', 'ol', 'blockquote']],
+        ]);
     } else {
         echo html_writer::tag('textarea', s($block->content), ['name' => 'content']);
     }

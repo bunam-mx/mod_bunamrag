@@ -142,3 +142,33 @@ function bunamrag_resequence_dxfslots(int $bunamragid): void {
         $slot++;
     }
 }
+
+/**
+ * Extract the video id from a YouTube URL, in any of its common forms
+ * (watch, youtu.be, shorts, embed, or a bare id).
+ *
+ * @param string $url
+ * @return string|null the 11-character video id, or null if not recognised.
+ */
+function bunamrag_youtube_video_id(string $url): ?string {
+    $url = trim($url);
+
+    if (preg_match('/^[A-Za-z0-9_-]{11}$/', $url)) {
+        return $url;
+    }
+
+    $patterns = [
+        '#youtu\.be/([A-Za-z0-9_-]{11})#',
+        '#youtube(?:-nocookie)?\.com/watch\?(?:.*&)?v=([A-Za-z0-9_-]{11})#',
+        '#youtube(?:-nocookie)?\.com/embed/([A-Za-z0-9_-]{11})#',
+        '#youtube(?:-nocookie)?\.com/shorts/([A-Za-z0-9_-]{11})#',
+    ];
+
+    foreach ($patterns as $pattern) {
+        if (preg_match($pattern, $url, $matches)) {
+            return $matches[1];
+        }
+    }
+
+    return null;
+}

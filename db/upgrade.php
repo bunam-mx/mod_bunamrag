@@ -182,5 +182,38 @@ function xmldb_bunamrag_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026090801, 'bunamrag');
     }
 
+    if ($oldversion < 2026091000) {
+        $table = new xmldb_table('bunamrag_content');
+
+        $field = new xmldb_field('transcript', XMLDB_TYPE_TEXT, null, null, null, null, null, 'contentformat');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('transcriptformat', XMLDB_TYPE_INTEGER, '4', null, XMLDB_NOTNULL, null, '0', 'transcript');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Bunamrag savepoint reached.
+        upgrade_mod_savepoint(true, 2026091000, 'bunamrag');
+    }
+
+    if ($oldversion < 2026091001) {
+        // transcriptformat turned out to be unnecessary: a transcript is
+        // always authored through the markdown editor, so its format is
+        // always FORMAT_MARKDOWN. Keeping the column defaulted to 0
+        // (FORMAT_MOODLE) meant transcripts saved before this fix rendered
+        // as plain text instead of parsed markdown.
+        $table = new xmldb_table('bunamrag_content');
+        $field = new xmldb_field('transcriptformat', XMLDB_TYPE_INTEGER, '4', null, XMLDB_NOTNULL, null, '0', 'transcript');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+
+        // Bunamrag savepoint reached.
+        upgrade_mod_savepoint(true, 2026091001, 'bunamrag');
+    }
+
     return true;
 }
