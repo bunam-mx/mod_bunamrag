@@ -26,6 +26,9 @@
 
 require(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/lib.php');
+require_once(__DIR__ . '/classes/local/interactive_schema.php');
+
+use mod_bunamrag\local\interactive_schema;
 
 $id = required_param('id', PARAM_INT);
 $subthemeid = required_param('subthemeid', PARAM_INT);
@@ -104,9 +107,35 @@ if ($action !== '' && confirm_sesskey()) {
             $contentid = required_param('contentid', PARAM_INT);
             $content = required_param('content', PARAM_RAW);
             $transcript = optional_param('transcript', null, PARAM_RAW);
-            $DB->set_field('bunamrag_content', 'content', $content, ['id' => $contentid, 'subthemeid' => $subtheme->id]);
-            if ($transcript !== null) {
-                $DB->set_field('bunamrag_content', 'transcript', $transcript, ['id' => $contentid, 'subthemeid' => $subtheme->id]);
+
+            $currentblocktype = $DB->get_field(
+                'bunamrag_content', 'blocktype', ['id' => $contentid, 'subthemeid' => $subtheme->id], MUST_EXIST
+            );
+
+            if ($currentblocktype === 'interactive') {
+                $decoded = json_decode($content);
+                $type = is_object($decoded) ? ($decoded->type ?? '') : '';
+                $errors = (json_last_error() !== JSON_ERROR_NONE)
+                    ? [get_string('interactive_error_invalidjson', 'mod_bunamrag', json_last_error_msg())]
+                    : interactive_schema::validate($type, $decoded);
+
+                if (!empty($errors)) {
+                    \core\notification::error(implode(' ', $errors));
+                } else {
+                    $DB->update_record('bunamrag_content', (object) [
+                        'id' => $contentid,
+                        'content' => $content,
+                        'interactivetype' => $type,
+                        'renderedhtml' => interactive_schema::render($type, $decoded, $modulecontext),
+                    ]);
+                }
+            } else {
+                $DB->set_field('bunamrag_content', 'content', $content, ['id' => $contentid, 'subthemeid' => $subtheme->id]);
+                if ($transcript !== null) {
+                    $DB->set_field(
+                        'bunamrag_content', 'transcript', $transcript, ['id' => $contentid, 'subthemeid' => $subtheme->id]
+                    );
+                }
             }
             break;
 
@@ -340,6 +369,45 @@ foreach ($blocks as $index => $block) {
             $transcriptid,
             ['toolbar' => ['heading', 'bold', 'italic', 'ul', 'ol', 'blockquote']],
         ]);
+    } else if ($block->blocktype === 'interactive') {
+        $selectid = 'interactivetype-' . $block->id;
+        $sourceid = 'interactivejson-' . $block->id;
+
+        echo html_writer::tag('label', get_string('interactivesubtype', 'mod_bunamrag'), [
+            'for' => $selectid, 'class' => 'd-block small text-muted mb-1',
+        ]);
+
+        $typeoptions = ['' => get_string('interactivesubtype_choose', 'mod_bunamrag')];
+        foreach (interactive_schema::TYPES as $type) {
+            $typeoptions[$type] = get_string('interactive_type_' . $type, 'mod_bunamrag');
+        }
+        echo html_writer::select($typeoptions, 'interactivetype_ui', $block->interactivetype ?? '', null, [
+            'id' => $selectid, 'class' => 'form-control mb-2', 'style' => 'max-width: 20rem;',
+            // Templates travel via a data attribute, not a js_call_amd
+            // argument: 4 pretty-printed JSON templates comfortably exceed
+            // the 1024-character limit Moodle warns about for AMD call args.
+            'data-templates' => json_encode(interactive_schema::templates()),
+        ]);
+
+        echo html_writer::tag('textarea', s($block->content), [
+            'name' => 'content', 'id' => $sourceid, 'rows' => '12', 'class' => 'w-100',
+            'style' => 'font-family: monospace;',
+        ]);
+
+        $PAGE->requires->js_call_amd('mod_bunamrag/manage_interactive', 'init', [
+            $selectid,
+            $sourceid,
+            get_string('interactive_confirmreplace', 'mod_bunamrag'),
+        ]);
+
+        if (!empty($block->renderedhtml)) {
+            interactive_schema::ensure_filters_ready($modulecontext);
+            echo html_writer::div(
+                html_writer::tag('h6', get_string('preview'), ['class' => 'mt-3 mb-1 text-muted']) . $block->renderedhtml,
+                'bunamrag-interactive-preview border rounded p-3 mt-2'
+            );
+            $PAGE->requires->js_call_amd('mod_bunamrag/interactive_' . $block->interactivetype, 'init');
+        }
     } else {
         echo html_writer::tag('textarea', s($block->content), ['name' => 'content']);
     }

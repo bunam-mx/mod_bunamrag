@@ -25,6 +25,7 @@
 require(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/lib.php');
 require_once(__DIR__ . '/classes/local/trajectory_resolver.php');
+require_once(__DIR__ . '/classes/local/interactive_schema.php');
 
 // Course module id.
 $id = optional_param('id', 0, PARAM_INT);
@@ -88,7 +89,7 @@ if ($themecount === 0) {
  * @param \context $modulecontext
  */
 function bunamrag_render_subtheme_blocks(\stdClass $subtheme, \context $modulecontext): void {
-    global $DB, $OUTPUT;
+    global $DB, $OUTPUT, $PAGE;
 
     echo html_writer::tag('h3', format_string($subtheme->themename), ['class' => 'h4 mb-2 text-muted']);
     echo html_writer::tag('h4', format_string($subtheme->name), [
@@ -190,6 +191,14 @@ function bunamrag_render_subtheme_blocks(\stdClass $subtheme, \context $moduleco
                 ]);
                 break;
             case 'interactive':
+                if (!empty($block->renderedhtml)) {
+                    \mod_bunamrag\local\interactive_schema::ensure_filters_ready($modulecontext);
+                    echo $block->renderedhtml;
+                    $PAGE->requires->js_call_amd('mod_bunamrag/interactive_' . $block->interactivetype, 'init');
+                } else {
+                    echo $OUTPUT->notification(get_string('interactivepending', 'mod_bunamrag'), 'info');
+                }
+                break;
             default:
                 echo $OUTPUT->notification(get_string('interactivepending', 'mod_bunamrag'), 'info');
                 break;

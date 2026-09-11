@@ -61,6 +61,8 @@
         <FIELD NAME="content" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Generic payload: HTML for textcontent, JSON for interactive, URL for external videourl, etc."/>
         <FIELD NAME="contentformat" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Format of the content field when it is rich text."/>
         <FIELD NAME="transcript" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Accessible text transcript (always markdown), currently only used by videourl blocks."/>
+        <FIELD NAME="interactivetype" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="dialogcards | multiplechoice | fillblanks | dragwords. Only used by interactive blocks."/>
+        <FIELD NAME="renderedhtml" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="HTML compiled from content at save time, for interactive blocks. Avoids reprocessing the JSON on every view."/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
