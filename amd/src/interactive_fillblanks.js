@@ -51,6 +51,7 @@ define(['mod_bunamrag/interactive_util'], function(Util) {
         Util.showGlobalFeedback(
             container, score, '.bunamrag-blanktext-globalfeedback-data', '.bunamrag-blanktext-globalfeedback'
         );
+        Util.recordAttempt(container, score);
     };
 
     var setup = function(container) {

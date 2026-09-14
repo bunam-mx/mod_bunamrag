@@ -49,6 +49,7 @@ define(['mod_bunamrag/interactive_util'], function(Util) {
 
         var score = total > 0 ? (rightcount / total) * 100 : 0;
         Util.showGlobalFeedback(container, score, '.bunamrag-mc-globalfeedback-data', '.bunamrag-mc-globalfeedback');
+        Util.recordAttempt(container, score);
     };
 
     var setup = function(container) {

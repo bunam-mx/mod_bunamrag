@@ -113,8 +113,14 @@ if ($action !== '' && confirm_sesskey()) {
             );
 
             if ($currentblocktype === 'interactive') {
+                $title = trim(optional_param('title', '', PARAM_TEXT));
+                // dialogcards are never tracked, regardless of what the form
+                // sent - the checkbox is hidden for that subtype client-side,
+                // but this is the authoritative check.
                 $decoded = json_decode($content);
                 $type = is_object($decoded) ? ($decoded->type ?? '') : '';
+                $trackresults = ($type !== 'dialogcards') && optional_param('trackresults', 0, PARAM_BOOL);
+
                 $errors = (json_last_error() !== JSON_ERROR_NONE)
                     ? [get_string('interactive_error_invalidjson', 'mod_bunamrag', json_last_error_msg())]
                     : interactive_schema::validate($type, $decoded);
@@ -126,7 +132,11 @@ if ($action !== '' && confirm_sesskey()) {
                         'id' => $contentid,
                         'content' => $content,
                         'interactivetype' => $type,
-                        'renderedhtml' => interactive_schema::render($type, $decoded, $modulecontext),
+                        'title' => $title,
+                        'trackresults' => $trackresults ? 1 : 0,
+                        'renderedhtml' => interactive_schema::render(
+                            $type, $decoded, $modulecontext, $contentid, $trackresults, $title
+                        ),
                     ]);
                 }
             } else {
@@ -372,6 +382,8 @@ foreach ($blocks as $index => $block) {
     } else if ($block->blocktype === 'interactive') {
         $selectid = 'interactivetype-' . $block->id;
         $sourceid = 'interactivejson-' . $block->id;
+        $titleid = 'interactivetitle-' . $block->id;
+        $trackwrapid = 'interactivetrackwrap-' . $block->id;
 
         echo html_writer::tag('label', get_string('interactivesubtype', 'mod_bunamrag'), [
             'for' => $selectid, 'class' => 'd-block small text-muted mb-1',
@@ -389,6 +401,27 @@ foreach ($blocks as $index => $block) {
             'data-templates' => json_encode(interactive_schema::templates()),
         ]);
 
+        echo html_writer::tag('label', get_string('interactivetitle', 'mod_bunamrag'), [
+            'for' => $titleid, 'class' => 'd-block small text-muted mb-1',
+        ]);
+        echo html_writer::empty_tag('input', [
+            'type' => 'text',
+            'name' => 'title',
+            'id' => $titleid,
+            'value' => $block->title ?? '',
+            'class' => 'form-control mb-2',
+            'style' => 'max-width: 20rem;',
+            'placeholder' => get_string('interactivetitle_placeholder', 'mod_bunamrag'),
+        ]);
+
+        echo html_writer::start_div('form-check mb-2', ['id' => $trackwrapid]);
+        echo html_writer::checkbox(
+            'trackresults', 1, (bool) $block->trackresults, get_string('interactivetrack', 'mod_bunamrag'),
+            ['id' => 'trackresults-' . $block->id, 'class' => 'form-check-input'],
+            ['class' => 'form-check-label']
+        );
+        echo html_writer::end_div();
+
         echo html_writer::tag('textarea', s($block->content), [
             'name' => 'content', 'id' => $sourceid, 'rows' => '12', 'class' => 'w-100',
             'style' => 'font-family: monospace;',
@@ -398,6 +431,7 @@ foreach ($blocks as $index => $block) {
             $selectid,
             $sourceid,
             get_string('interactive_confirmreplace', 'mod_bunamrag'),
+            $trackwrapid,
         ]);
 
         if (!empty($block->renderedhtml)) {

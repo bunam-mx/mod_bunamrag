@@ -187,6 +187,7 @@ define(['core/str', 'mod_bunamrag/interactive_util'], function(Str, Util) {
         Util.showGlobalFeedback(
             container, score, '.bunamrag-blanktext-globalfeedback-data', '.bunamrag-blanktext-globalfeedback'
         );
+        Util.recordAttempt(container, score);
     };
 
     var setup = function(container) {

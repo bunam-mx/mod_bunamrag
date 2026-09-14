@@ -131,21 +131,45 @@ class interactive_schema {
      * @param string $type
      * @param \stdClass $decoded
      * @param \context $context used to format_text() markdown fields.
+     * @param int $contentid the bunamrag_content id, embedded so tracked
+     *            blocks can report attempts back against it.
+     * @param bool $trackresults whether to embed the data attribute that
+     *             makes the AMD module record attempts. Always false for
+     *             dialogcards, which are never tracked.
+     * @param string $title optional label shown above the block and used to
+     *               identify it in the results summary.
      * @return string HTML.
      */
-    public static function render(string $type, \stdClass $decoded, \context $context): string {
+    public static function render(
+        string $type,
+        \stdClass $decoded,
+        \context $context,
+        int $contentid = 0,
+        bool $trackresults = false,
+        string $title = ''
+    ): string {
         switch ($type) {
             case 'dialogcards':
-                return self::render_dialogcards($decoded, $context);
+                $inner = self::render_dialogcards($decoded, $context);
+                break;
             case 'multiplechoice':
-                return self::render_multiplechoice($decoded, $context);
+                $inner = self::render_multiplechoice($decoded, $context, $contentid, $trackresults);
+                break;
             case 'fillblanks':
-                return self::render_blanktext($decoded, $context, false);
+                $inner = self::render_blanktext($decoded, $context, false, $contentid, $trackresults);
+                break;
             case 'dragwords':
-                return self::render_blanktext($decoded, $context, true);
+                $inner = self::render_blanktext($decoded, $context, true, $contentid, $trackresults);
+                break;
             default:
                 return '';
         }
+
+        if (trim($title) === '') {
+            return $inner;
+        }
+
+        return \html_writer::tag('h4', format_string($title), ['class' => 'bunamrag-interactive-title']) . $inner;
     }
 
     /**
@@ -427,13 +451,38 @@ class interactive_schema {
     }
 
     /**
+     * Build the data-* attributes that tell the AMD module whether (and
+     * against which bunamrag_content id / course module) to record attempts.
+     *
+     * @param int $contentid
+     * @param bool $trackresults
+     * @param \context $context a context_module; its instanceid is the cmid
+     *                 the record-attempt web service needs.
+     * @return array
+     */
+    private static function tracking_attrs(int $contentid, bool $trackresults, \context $context): array {
+        if (!$trackresults || $contentid <= 0) {
+            return [];
+        }
+        return [
+            'data-bunamrag-contentid' => $contentid,
+            'data-bunamrag-cmid' => $context->instanceid,
+            'data-bunamrag-track' => '1',
+        ];
+    }
+
+    /**
      * Render a multiplechoice payload.
      *
      * @param \stdClass $decoded
      * @param \context $context
+     * @param int $contentid
+     * @param bool $trackresults
      * @return string
      */
-    private static function render_multiplechoice(\stdClass $decoded, \context $context): string {
+    private static function render_multiplechoice(
+        \stdClass $decoded, \context $context, int $contentid = 0, bool $trackresults = false
+    ): string {
         $correctcount = 0;
         foreach ($decoded->options as $option) {
             if (!empty($option->correct)) {
@@ -485,7 +534,7 @@ class interactive_schema {
             \html_writer::div(format_text((string) $decoded->question, FORMAT_MARKDOWN, ['context' => $context]), 'bunamrag-mc-question') .
             $options . $checkbutton . $globalfeedback . $globalfeedbackdata,
             'bunamrag-mc',
-            ['data-bunamrag-interactive' => 'multiplechoice']
+            ['data-bunamrag-interactive' => 'multiplechoice'] + self::tracking_attrs($contentid, $trackresults, $context)
         );
     }
 
@@ -495,9 +544,13 @@ class interactive_schema {
      * @param \stdClass $decoded
      * @param \context $context
      * @param bool $dragwords true for the drag-the-words variant.
+     * @param int $contentid
+     * @param bool $trackresults
      * @return string
      */
-    private static function render_blanktext(\stdClass $decoded, \context $context, bool $dragwords): string {
+    private static function render_blanktext(
+        \stdClass $decoded, \context $context, bool $dragwords, int $contentid = 0, bool $trackresults = false
+    ): string {
         $segments = self::parse_blank_text((string) $decoded->text);
         $casesensitive = !empty($decoded->casesensitive) ? '1' : '0';
 
@@ -575,6 +628,7 @@ class interactive_schema {
             $checkbutton . $globalfeedback . $globalfeedbackdata,
             $dragwords ? 'bunamrag-dragwords' : 'bunamrag-fillblanks',
             ['data-bunamrag-interactive' => $dragwords ? 'dragwords' : 'fillblanks']
+                + self::tracking_attrs($contentid, $trackresults, $context)
         );
     }
 }

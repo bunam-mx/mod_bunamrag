@@ -20,7 +20,7 @@
  * @copyright   2026 Omar Terrazas Razo <terrazasrazo@gmail.com>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['core_filters/events'], function(FilterEvents) {
+define(['core_filters/events', 'core/ajax', 'core/notification'], function(FilterEvents, Ajax, Notification) {
 
     /**
      * Run setupFn once on every not-yet-initialised container of the given
@@ -87,8 +87,34 @@ define(['core_filters/events'], function(FilterEvents) {
         }
     };
 
+    /**
+     * If the container is marked for tracking (data-bunamrag-track="1"),
+     * report this attempt's score to the server, which keeps a running
+     * attempt count and best score per user per block for the results
+     * summary. A no-op for untracked blocks (and for dialogcards, which
+     * never carry the tracking attributes at all).
+     *
+     * @param {Element} container
+     * @param {Number} score 0-100.
+     */
+    var recordAttempt = function(container, score) {
+        if (container.dataset.bunamragTrack !== '1') {
+            return;
+        }
+
+        Ajax.call([{
+            methodname: 'mod_bunamrag_record_interactive_attempt',
+            args: {
+                cmid: parseInt(container.dataset.bunamragCmid, 10),
+                contentid: parseInt(container.dataset.bunamragContentid, 10),
+                score: score
+            }
+        }])[0].catch(Notification.exception);
+    };
+
     return {
         initEach: initEach,
-        showGlobalFeedback: showGlobalFeedback
+        showGlobalFeedback: showGlobalFeedback,
+        recordAttempt: recordAttempt
     };
 });

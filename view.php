@@ -404,7 +404,123 @@ $DB->insert_record('bunamrag_log', (object) [
 
 bunamrag_render_subtheme_blocks($subtheme, $modulecontext);
 
+// Offer the tracked-interactives results summary at the point the teacher
+// configured (mod_form.php: summaryafter), if any, presented the way they
+// chose (summarymode: modal or independent page), optionally intercepting
+// the pager's "next" navigation (summarymodalauto / summarypagerinsert).
+$summaryafter = $moduleinstance->summaryafter ?? 'none';
+$summarymode = $moduleinstance->summarymode ?? 'page';
+$summaryscope = null;
+$summaryscopeid = 0;
+
+if ($summaryafter === 'subtheme') {
+    $summaryscope = 'subtheme';
+    $summaryscopeid = $subtheme->id;
+} else if ($summaryafter === 'theme') {
+    $islastoftheme = ($page === $total - 1) || ((int) $pagelist[$page + 1]->themeid !== (int) $subtheme->themeid);
+    if ($islastoftheme) {
+        $summaryscope = 'theme';
+        $summaryscopeid = $subtheme->themeid;
+    }
+} else if ($summaryafter === 'activity' && $page === $total - 1) {
+    $summaryscope = 'activity';
+}
+
+// data-* attributes for amd/src/results_summary.js to find and intercept
+// the pager's "next" link(s); left empty when no auto-behaviour applies.
+$pagerattrs = [];
+
+if ($summaryscope !== null) {
+    $hasnextpage = ($page + 1) < $total;
+    $continuepage = $hasnextpage ? $page + 1 : null;
+
+    $summaryurlparams = ['id' => $cm->id, 'scope' => $summaryscope, 'scopeid' => $summaryscopeid];
+    if ($continuepage !== null) {
+        $summaryurlparams['continuepage'] = $continuepage;
+    }
+    $summaryurl = new moodle_url('/mod/bunamrag/summary.php', $summaryurlparams);
+
+    if ($summarymode === 'modal') {
+        $modalid = 'bunamrag-summary-modal';
+
+        echo html_writer::div(
+            html_writer::tag('button', get_string('interactivesummary_viewlink', 'mod_bunamrag'), [
+                'type' => 'button',
+                'class' => 'btn btn-secondary',
+                'data-toggle' => 'modal',
+                'data-target' => '#' . $modalid,
+            ]),
+            'bunamrag-summary-link mt-3'
+        );
+
+        $rows = \mod_bunamrag\local\results_summary::get_summary(
+            $moduleinstance->id, $USER->id, $summaryscope, $summaryscopeid
+        );
+        $summaryhtml = \mod_bunamrag\local\results_summary::render_html(
+            $rows, (string) ($moduleinstance->summarymessage ?? ''), $modulecontext
+        );
+
+        if ($hasnextpage) {
+            $continuebutton = html_writer::link(
+                new moodle_url($PAGE->url, ['page' => $continuepage]),
+                get_string('interactivesummary_continue', 'mod_bunamrag'),
+                ['class' => 'btn btn-primary']
+            );
+        } else {
+            $continuebutton = html_writer::tag('button', get_string('closebuttontitle'), [
+                'type' => 'button', 'class' => 'btn btn-primary', 'data-dismiss' => 'modal',
+            ]);
+        }
+
+        echo html_writer::start_div('modal fade', ['id' => $modalid, 'tabindex' => '-1', 'role' => 'dialog']);
+        echo html_writer::start_div('modal-dialog modal-dialog-scrollable modal-lg', ['role' => 'document']);
+        echo html_writer::start_div('modal-content');
+        echo html_writer::start_div('modal-header');
+        echo html_writer::tag('h5', get_string('interactivesummary_title', 'mod_bunamrag'), ['class' => 'modal-title']);
+        echo html_writer::tag('button', html_writer::tag('span', '&times;', ['aria-hidden' => 'true']), [
+            'type' => 'button',
+            'class' => 'close',
+            'data-dismiss' => 'modal',
+            'aria-label' => get_string('closebuttontitle'),
+        ]);
+        echo html_writer::end_div();
+        echo html_writer::div($summaryhtml, 'modal-body');
+        echo html_writer::div($continuebutton, 'modal-footer');
+        echo html_writer::end_div();
+        echo html_writer::end_div();
+        echo html_writer::end_div();
+
+        if (!empty($moduleinstance->summarymodalauto) && $hasnextpage) {
+            $pagerattrs = [
+                'data-bunamrag-summary-nextpage' => $continuepage,
+                'data-bunamrag-summary-mode' => 'modal',
+                'data-bunamrag-summary-modalid' => $modalid,
+            ];
+        }
+    } else {
+        echo html_writer::div(
+            $OUTPUT->single_button($summaryurl, get_string('interactivesummary_viewlink', 'mod_bunamrag'), 'get'),
+            'bunamrag-summary-link mt-3'
+        );
+
+        if (!empty($moduleinstance->summarypagerinsert) && $hasnextpage) {
+            $pagerattrs = [
+                'data-bunamrag-summary-nextpage' => $continuepage,
+                'data-bunamrag-summary-mode' => 'page',
+                'data-bunamrag-summary-url' => $summaryurl->out(false),
+            ];
+        }
+    }
+}
+
 $pagerurl = new moodle_url($PAGE->url);
-echo $OUTPUT->paging_bar($total, $page, 1, $pagerurl);
+$pagingbarhtml = $OUTPUT->paging_bar($total, $page, 1, $pagerurl);
+
+if (!empty($pagerattrs)) {
+    echo html_writer::div($pagingbarhtml, '', $pagerattrs);
+    $PAGE->requires->js_call_amd('mod_bunamrag/results_summary', 'init');
+} else {
+    echo $pagingbarhtml;
+}
 
 echo $OUTPUT->footer();

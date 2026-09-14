@@ -84,6 +84,45 @@ class mod_bunamrag_mod_form extends moodleform_mod {
             $mform->addElement('static', 'noquizzeswarning', '', get_string('noquizzesincourse', 'mod_bunamrag'));
         }
 
+        // Results summary fieldset.
+        $mform->addElement('header', 'bunamragsummaryfieldset', get_string('summaryfieldset', 'mod_bunamrag'));
+
+        $summaryafteroptions = [
+            'none' => get_string('summaryafter_none', 'mod_bunamrag'),
+            'subtheme' => get_string('summaryafter_subtheme', 'mod_bunamrag'),
+            'theme' => get_string('summaryafter_theme', 'mod_bunamrag'),
+            'activity' => get_string('summaryafter_activity', 'mod_bunamrag'),
+        ];
+        $mform->addElement('select', 'summaryafter', get_string('summaryafter', 'mod_bunamrag'), $summaryafteroptions);
+        $mform->setType('summaryafter', PARAM_ALPHA);
+        $mform->setDefault('summaryafter', 'none');
+        $mform->addHelpButton('summaryafter', 'summaryafter', 'mod_bunamrag');
+
+        $mform->addElement(
+            'textarea', 'summarymessage', get_string('summarymessage', 'mod_bunamrag'), ['rows' => 3, 'cols' => 60]
+        );
+        $mform->setType('summarymessage', PARAM_TEXT);
+        $mform->addHelpButton('summarymessage', 'summarymessage', 'mod_bunamrag');
+
+        $summarymodeoptions = [
+            'page' => get_string('summarymode_page', 'mod_bunamrag'),
+            'modal' => get_string('summarymode_modal', 'mod_bunamrag'),
+        ];
+        $mform->addElement('select', 'summarymode', get_string('summarymode', 'mod_bunamrag'), $summarymodeoptions);
+        $mform->setType('summarymode', PARAM_ALPHA);
+        $mform->setDefault('summarymode', 'page');
+        $mform->addHelpButton('summarymode', 'summarymode', 'mod_bunamrag');
+
+        $mform->addElement('advcheckbox', 'summarymodalauto', '', get_string('summarymodalauto', 'mod_bunamrag'));
+        $mform->setDefault('summarymodalauto', 0);
+        $mform->addHelpButton('summarymodalauto', 'summarymodalauto', 'mod_bunamrag');
+        $mform->hideIf('summarymodalauto', 'summarymode', 'neq', 'modal');
+
+        $mform->addElement('advcheckbox', 'summarypagerinsert', '', get_string('summarypagerinsert', 'mod_bunamrag'));
+        $mform->setDefault('summarypagerinsert', 0);
+        $mform->addHelpButton('summarypagerinsert', 'summarypagerinsert', 'mod_bunamrag');
+        $mform->hideIf('summarypagerinsert', 'summarymode', 'neq', 'page');
+
         // Add standard elements.
         $this->standard_coursemodule_elements();
 

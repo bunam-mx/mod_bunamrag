@@ -14,8 +14,12 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * manage_content.php authoring helper for "interactive" blocks: picking a
- * subtype from the <select> preloads its JSON template into the textarea.
+ * manage_content.php authoring helper for "interactive" blocks:
+ *   - Picking a subtype from the <select> preloads its JSON template into
+ *     the textarea.
+ *   - The "include in results tracking" checkbox is hidden for dialogcards,
+ *     which are never tracked (the server enforces this too, regardless of
+ *     what the form submits).
  *
  * @module      mod_bunamrag/manage_interactive
  * @copyright   2026 Omar Terrazas Razo <terrazasrazo@gmail.com>
@@ -28,10 +32,12 @@ define([], function() {
      *                 templates in its data-templates attribute: type => template JSON string).
      * @param {String} textareaId id of the JSON <textarea>.
      * @param {String} confirmMessage shown before overwriting non-empty content.
+     * @param {String} trackWrapId id of the wrapper around the "track results" checkbox.
      */
-    var init = function(selectId, textareaId, confirmMessage) {
+    var init = function(selectId, textareaId, confirmMessage, trackWrapId) {
         var select = document.getElementById(selectId);
         var textarea = document.getElementById(textareaId);
+        var trackWrap = document.getElementById(trackWrapId);
         if (!select || !textarea) {
             return;
         }
@@ -43,7 +49,15 @@ define([], function() {
             templates = {};
         }
 
+        var updateTrackVisibility = function() {
+            if (trackWrap) {
+                trackWrap.hidden = (select.value === 'dialogcards');
+            }
+        };
+
         select.addEventListener('change', function() {
+            updateTrackVisibility();
+
             var template = templates[select.value];
             if (!template) {
                 return;
@@ -53,6 +67,8 @@ define([], function() {
             }
             textarea.value = template;
         });
+
+        updateTrackVisibility();
     };
 
     return {

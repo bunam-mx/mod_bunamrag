@@ -101,6 +101,7 @@ function bunamrag_delete_instance($id) {
 
     $DB->delete_records('bunamrag_trajectory', ['bunamragid' => $id]);
     $DB->delete_records('bunamrag_log', ['bunamragid' => $id]);
+    $DB->delete_records('bunamrag_interactive_progress', ['bunamragid' => $id]);
     $DB->delete_records('bunamrag', ['id' => $id]);
 
     return true;

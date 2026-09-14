@@ -232,5 +232,78 @@ function xmldb_bunamrag_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026091002, 'bunamrag');
     }
 
+    if ($oldversion < 2026091400) {
+        $table = new xmldb_table('bunamrag');
+        $field = new xmldb_field('summaryafter', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, 'none', 'dxenrichment');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $table = new xmldb_table('bunamrag_content');
+
+        $field = new xmldb_field('title', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'renderedhtml');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('trackresults', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'title');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define table bunamrag_interactive_progress to be created.
+        $table = new xmldb_table('bunamrag_interactive_progress');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('bunamragid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('contentid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('attempts', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('bestscore', XMLDB_TYPE_NUMBER, '5,2', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('fk_bunamragid', XMLDB_KEY_FOREIGN, ['bunamragid'], 'bunamrag', ['id']);
+        $table->add_key('fk_contentid', XMLDB_KEY_FOREIGN, ['contentid'], 'bunamrag_content', ['id']);
+        $table->add_key('fk_userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+
+        $table->add_index('contentid_userid', XMLDB_INDEX_UNIQUE, ['contentid', 'userid']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Bunamrag savepoint reached.
+        upgrade_mod_savepoint(true, 2026091400, 'bunamrag');
+    }
+
+    if ($oldversion < 2026091401) {
+        $table = new xmldb_table('bunamrag');
+
+        $field = new xmldb_field('summarymessage', XMLDB_TYPE_TEXT, null, null, null, null, null, 'summaryafter');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('summarymode', XMLDB_TYPE_CHAR, '10', null, XMLDB_NOTNULL, null, 'page', 'summarymessage');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('summarymodalauto', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'summarymode');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field(
+            'summarypagerinsert', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'summarymodalauto'
+        );
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Bunamrag savepoint reached.
+        upgrade_mod_savepoint(true, 2026091401, 'bunamrag');
+    }
+
     return true;
 }

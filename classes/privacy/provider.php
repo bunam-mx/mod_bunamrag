@@ -71,6 +71,14 @@ class provider implements
             'timecreated' => 'privacy:metadata:bunamrag_log:timecreated',
         ], 'privacy:metadata:bunamrag_log');
 
+        $collection->add_database_table('bunamrag_interactive_progress', [
+            'userid' => 'privacy:metadata:bunamrag_interactive_progress:userid',
+            'contentid' => 'privacy:metadata:bunamrag_interactive_progress:contentid',
+            'attempts' => 'privacy:metadata:bunamrag_interactive_progress:attempts',
+            'bestscore' => 'privacy:metadata:bunamrag_interactive_progress:bestscore',
+            'timemodified' => 'privacy:metadata:bunamrag_interactive_progress:timemodified',
+        ], 'privacy:metadata:bunamrag_interactive_progress');
+
         $collection->add_subsystem_link('core_question', [], 'privacy:metadata:core_question');
 
         return $collection;
@@ -92,6 +100,8 @@ class provider implements
                         SELECT 1 FROM {bunamrag_trajectory} t WHERE t.bunamragid = b.id AND t.userid = :userid1
                     ) OR EXISTS (
                         SELECT 1 FROM {bunamrag_log} l WHERE l.bunamragid = b.id AND l.userid = :userid2
+                    ) OR EXISTS (
+                        SELECT 1 FROM {bunamrag_interactive_progress} p WHERE p.bunamragid = b.id AND p.userid = :userid3
                     )";
 
         $contextlist = new contextlist();
@@ -99,6 +109,7 @@ class provider implements
             'contextlevel' => CONTEXT_MODULE,
             'userid1' => $userid,
             'userid2' => $userid,
+            'userid3' => $userid,
         ]);
 
         return $contextlist;
@@ -122,8 +133,14 @@ class provider implements
 
         $sql = "SELECT userid FROM {bunamrag_trajectory} WHERE bunamragid = :bunamragid1
                 UNION
-                SELECT userid FROM {bunamrag_log} WHERE bunamragid = :bunamragid2";
-        $userlist->add_from_sql('userid', $sql, ['bunamragid1' => $cm->instance, 'bunamragid2' => $cm->instance]);
+                SELECT userid FROM {bunamrag_log} WHERE bunamragid = :bunamragid2
+                UNION
+                SELECT userid FROM {bunamrag_interactive_progress} WHERE bunamragid = :bunamragid3";
+        $userlist->add_from_sql('userid', $sql, [
+            'bunamragid1' => $cm->instance,
+            'bunamragid2' => $cm->instance,
+            'bunamragid3' => $cm->instance,
+        ]);
     }
 
     /**
@@ -159,10 +176,18 @@ class provider implements
                 'timecreated' => transform::datetime($r->timecreated),
             ], $log));
 
-            if (!empty($trajectorydata) || !empty($logdata)) {
+            $progress = $DB->get_records('bunamrag_interactive_progress', ['bunamragid' => $cm->instance, 'userid' => $userid]);
+            $progressdata = array_values(array_map(fn($r) => (object) [
+                'contentid' => $r->contentid,
+                'attempts' => $r->attempts,
+                'bestscore' => $r->bestscore,
+                'timemodified' => transform::datetime($r->timemodified),
+            ], $progress));
+
+            if (!empty($trajectorydata) || !empty($logdata) || !empty($progressdata)) {
                 writer::with_context($context)->export_data(
                     [get_string('pluginname', 'mod_bunamrag')],
-                    (object) ['trajectory' => $trajectorydata, 'log' => $logdata]
+                    (object) ['trajectory' => $trajectorydata, 'log' => $logdata, 'interactive_progress' => $progressdata]
                 );
             }
         }
@@ -187,6 +212,7 @@ class provider implements
 
         $DB->delete_records('bunamrag_trajectory', ['bunamragid' => $cm->instance]);
         $DB->delete_records('bunamrag_log', ['bunamragid' => $cm->instance]);
+        $DB->delete_records('bunamrag_interactive_progress', ['bunamragid' => $cm->instance]);
     }
 
     /**
@@ -211,6 +237,7 @@ class provider implements
 
             $DB->delete_records('bunamrag_trajectory', ['bunamragid' => $cm->instance, 'userid' => $userid]);
             $DB->delete_records('bunamrag_log', ['bunamragid' => $cm->instance, 'userid' => $userid]);
+            $DB->delete_records('bunamrag_interactive_progress', ['bunamragid' => $cm->instance, 'userid' => $userid]);
         }
     }
 
@@ -241,5 +268,6 @@ class provider implements
         $params['bunamragid'] = $cm->instance;
         $DB->delete_records_select('bunamrag_trajectory', "bunamragid = :bunamragid AND userid $insql", $params);
         $DB->delete_records_select('bunamrag_log', "bunamragid = :bunamragid AND userid $insql", $params);
+        $DB->delete_records_select('bunamrag_interactive_progress', "bunamragid = :bunamragid AND userid $insql", $params);
     }
 }

@@ -13,6 +13,11 @@
         <FIELD NAME="introformat" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="The format of the intro field."/>
         <FIELD NAME="dxfundamental" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Course module id of the DX Fundamental quiz."/>
         <FIELD NAME="dxenrichment" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Course module id of the DX Enriquecimiento quiz."/>
+        <FIELD NAME="summaryafter" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="none" SEQUENCE="false" COMMENT="none | subtheme | theme | activity. When to show the tracked-interactives results summary to a student."/>
+        <FIELD NAME="summarymessage" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Custom message shown alongside the results summary, always rendered as markdown."/>
+        <FIELD NAME="summarymode" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="page" SEQUENCE="false" COMMENT="modal | page. How the results summary is presented."/>
+        <FIELD NAME="summarymodalauto" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="When summarymode = modal: intercept the pager's next click at the summary point and show the modal before navigating."/>
+        <FIELD NAME="summarypagerinsert" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="When summarymode = page: insert the summary page as an unnumbered stop when advancing past the summary point, instead of only being reachable via the button."/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Timestamp of when the instance was added to the course."/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Timestamp of when the instance was last modified."/>
       </FIELDS>
@@ -63,11 +68,33 @@
         <FIELD NAME="transcript" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Accessible text transcript (always markdown), currently only used by videourl blocks."/>
         <FIELD NAME="interactivetype" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="dialogcards | multiplechoice | fillblanks | dragwords. Only used by interactive blocks."/>
         <FIELD NAME="renderedhtml" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="HTML compiled from content at save time, for interactive blocks. Avoids reprocessing the JSON on every view."/>
+        <FIELD NAME="title" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Short label identifying this interactive block in the results summary. Only used by interactive blocks."/>
+        <FIELD NAME="trackresults" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Whether this interactive block's attempts/best score are recorded and shown in the results summary. Only meaningful for multiplechoice/fillblanks/dragwords - dialogcards are never tracked."/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="fk_subthemeid" TYPE="foreign" FIELDS="subthemeid" REFTABLE="bunamrag_subtheme" REFFIELDS="id"/>
       </KEYS>
+    </TABLE>
+    <TABLE NAME="bunamrag_interactive_progress" COMMENT="Per-user aggregate progress (attempts, best score) on a tracked interactive content block.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="bunamragid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="contentid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="The bunamrag_content row (blocktype = interactive, trackresults = 1) this progress is for."/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="attempts" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="bestscore" TYPE="number" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false" DECIMALS="2" COMMENT="Best score (0-100) achieved across all attempts."/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_bunamragid" TYPE="foreign" FIELDS="bunamragid" REFTABLE="bunamrag" REFFIELDS="id"/>
+        <KEY NAME="fk_contentid" TYPE="foreign" FIELDS="contentid" REFTABLE="bunamrag_content" REFFIELDS="id"/>
+        <KEY NAME="fk_userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="contentid_userid" UNIQUE="true" FIELDS="contentid, userid"/>
+      </INDEXES>
     </TABLE>
     <TABLE NAME="bunamrag_trajectory" COMMENT="Caches the personalized level (per subtheme code) resolved for a user the first time they view the content, so it does not need to be recalculated from the DX quizzes on every visit.">
       <FIELDS>
