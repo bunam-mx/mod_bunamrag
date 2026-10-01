@@ -36,11 +36,29 @@
 }
 
 /* Multiple choice */
+.bunamrag-mc-qblock {
+    margin-bottom: 1.5rem;
+}
+.bunamrag-mc-options {
+    display: flex;
+    flex-direction: column;
+}
 .bunamrag-mc-option {
+    display: block;
+    width: 100%;
+    text-align: left;
     border: 1px solid #dcdcdc;
     border-radius: 6px;
     padding: 0.5rem 0.75rem;
     margin-bottom: 0.5rem;
+    background: #fff;
+    cursor: pointer;
+}
+.bunamrag-mc-option:hover:not(:disabled) {
+    border-color: #0f6cbf;
+}
+.bunamrag-mc-option:disabled {
+    cursor: default;
 }
 .bunamrag-mc-option.is-correct {
     border-color: #2e7d32;

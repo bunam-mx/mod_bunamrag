@@ -59,10 +59,23 @@ class interactive_schema {
 
         $multiplechoice = [
             'type' => 'multiplechoice',
-            'question' => 'Escribe la pregunta aquí',
-            'options' => [
-                ['text' => 'Opción 1', 'correct' => true, 'feedback' => ''],
-                ['text' => 'Opción 2', 'correct' => false, 'feedback' => ''],
+            'onebyone' => false,
+            'randomizequestions' => false,
+            'questions' => [
+                [
+                    'question' => 'Escribe la primera pregunta aquí',
+                    'options' => [
+                        ['text' => 'Opción 1', 'correct' => true, 'feedback' => ''],
+                        ['text' => 'Opción 2', 'correct' => false, 'feedback' => ''],
+                    ],
+                ],
+                [
+                    'question' => 'Escribe la segunda pregunta aquí',
+                    'options' => [
+                        ['text' => 'Opción 1', 'correct' => false, 'feedback' => ''],
+                        ['text' => 'Opción 2', 'correct' => true, 'feedback' => ''],
+                    ],
+                ],
             ],
             'globalfeedback' => [
                 ['from' => 90, 'to' => 100, 'feedback' => '¡Excelente!'],
@@ -212,26 +225,38 @@ class interactive_schema {
     private static function validate_multiplechoice(\stdClass $decoded): array {
         $errors = [];
 
-        if (empty($decoded->question) || trim((string) $decoded->question) === '') {
-            $errors[] = get_string('interactive_error_multiplechoice_question', 'mod_bunamrag');
+        $questions = is_array($decoded->questions ?? null) ? $decoded->questions : [];
+        if (empty($questions)) {
+            $errors[] = get_string('interactive_error_multiplechoice_noquestions', 'mod_bunamrag');
+            return $errors;
         }
 
-        $options = is_array($decoded->options ?? null) ? $decoded->options : [];
-        if (count($options) < 2) {
-            $errors[] = get_string('interactive_error_multiplechoice_options', 'mod_bunamrag');
-        }
+        foreach ($questions as $qindex => $question) {
+            $qn = $qindex + 1;
 
-        $hascorrect = false;
-        foreach ($options as $index => $option) {
-            if (!is_object($option) || empty($option->text) || trim((string) $option->text) === '') {
-                $errors[] = get_string('interactive_error_multiplechoice_optiontext', 'mod_bunamrag', $index + 1);
+            if (!is_object($question) || empty($question->question) || trim((string) $question->question) === '') {
+                $errors[] = get_string('interactive_error_multiplechoice_question', 'mod_bunamrag', $qn);
             }
-            if (!empty($option->correct)) {
-                $hascorrect = true;
+
+            $options = is_object($question) && is_array($question->options ?? null) ? $question->options : [];
+            if (count($options) < 2) {
+                $errors[] = get_string('interactive_error_multiplechoice_options', 'mod_bunamrag', $qn);
             }
-        }
-        if (!$hascorrect) {
-            $errors[] = get_string('interactive_error_multiplechoice_correct', 'mod_bunamrag');
+
+            $hascorrect = false;
+            foreach ($options as $oindex => $option) {
+                if (!is_object($option) || empty($option->text) || trim((string) $option->text) === '') {
+                    $errors[] = get_string('interactive_error_multiplechoice_optiontext', 'mod_bunamrag', (object) [
+                        'qindex' => $qn, 'oindex' => $oindex + 1,
+                    ]);
+                }
+                if (is_object($option) && !empty($option->correct)) {
+                    $hascorrect = true;
+                }
+            }
+            if (!$hascorrect) {
+                $errors[] = get_string('interactive_error_multiplechoice_correct', 'mod_bunamrag', $qn);
+            }
         }
 
         return array_merge($errors, self::validate_globalfeedback($decoded));
@@ -483,46 +508,58 @@ class interactive_schema {
     private static function render_multiplechoice(
         \stdClass $decoded, \context $context, int $contentid = 0, bool $trackresults = false
     ): string {
-        $correctcount = 0;
-        foreach ($decoded->options as $option) {
-            if (!empty($option->correct)) {
-                $correctcount++;
-            }
-        }
-        $multiple = $correctcount > 1;
-        $inputtype = $multiple ? 'checkbox' : 'radio';
-        $groupname = 'bunamrag-mc-' . random_string(6);
+        $onebyone = !empty($decoded->onebyone);
+        $randomizequestions = !empty($decoded->randomizequestions);
 
-        $options = '';
-        foreach ($decoded->options as $index => $option) {
-            $input = \html_writer::empty_tag('input', [
-                'type' => $inputtype,
-                'name' => $groupname,
-                'value' => $index,
-                'class' => 'bunamrag-mc-input',
-            ]);
-            $label = \html_writer::tag('label', $input . ' ' . \html_writer::tag(
-                'span', self::filter_plain_text((string) $option->text, $context)
-            ));
+        $questionshtml = '';
+        foreach ($decoded->questions as $qindex => $question) {
+            $optionshtml = '';
+            foreach ($question->options as $option) {
+                $feedback = '';
+                if (!empty($option->feedback)) {
+                    $feedback = \html_writer::div(
+                        format_text((string) $option->feedback, FORMAT_MARKDOWN, ['context' => $context]),
+                        'bunamrag-mc-feedback',
+                        ['hidden' => 'hidden']
+                    );
+                }
 
-            $feedback = '';
-            if (!empty($option->feedback)) {
-                $feedback = \html_writer::div(
-                    format_text((string) $option->feedback, FORMAT_MARKDOWN, ['context' => $context]),
-                    'bunamrag-mc-feedback',
-                    ['hidden' => 'hidden']
+                $optionshtml .= \html_writer::tag(
+                    'button',
+                    \html_writer::tag('span', self::filter_plain_text((string) $option->text, $context)) . $feedback,
+                    [
+                        'type' => 'button',
+                        'class' => 'bunamrag-mc-option',
+                        'data-correct' => !empty($option->correct) ? '1' : '0',
+                    ]
                 );
             }
 
-            $options .= \html_writer::div($label . $feedback, 'bunamrag-mc-option', [
-                'data-correct' => !empty($option->correct) ? '1' : '0',
-            ]);
-        }
+            $continuebutton = '';
+            if ($onebyone) {
+                $continuebutton = \html_writer::tag('button', get_string('interactive_continue', 'mod_bunamrag'), [
+                    'type' => 'button',
+                    'class' => 'btn btn-primary btn-sm mt-2 bunamrag-mc-continue',
+                    'hidden' => 'hidden',
+                ]);
+            }
 
-        $checkbutton = \html_writer::tag('button', get_string('interactive_check', 'mod_bunamrag'), [
-            'type' => 'button',
-            'class' => 'btn btn-primary btn-sm mt-2 bunamrag-mc-check',
-        ]);
+            $qblockattrs = ['data-index' => $qindex];
+            if ($onebyone && $qindex > 0) {
+                $qblockattrs['hidden'] = 'hidden';
+            }
+
+            $questionshtml .= \html_writer::div(
+                \html_writer::div(
+                    format_text((string) $question->question, FORMAT_MARKDOWN, ['context' => $context]),
+                    'bunamrag-mc-question'
+                ) .
+                \html_writer::div($optionshtml, 'bunamrag-mc-options') .
+                $continuebutton,
+                'bunamrag-mc-qblock',
+                $qblockattrs
+            );
+        }
 
         $globalfeedback = \html_writer::div('', 'bunamrag-mc-globalfeedback mt-2', ['aria-live' => 'polite', 'hidden' => 'hidden']);
         $globalfeedbackdata = \html_writer::tag(
@@ -531,10 +568,13 @@ class interactive_schema {
         );
 
         return \html_writer::div(
-            \html_writer::div(format_text((string) $decoded->question, FORMAT_MARKDOWN, ['context' => $context]), 'bunamrag-mc-question') .
-            $options . $checkbutton . $globalfeedback . $globalfeedbackdata,
+            $questionshtml . $globalfeedback . $globalfeedbackdata,
             'bunamrag-mc',
-            ['data-bunamrag-interactive' => 'multiplechoice'] + self::tracking_attrs($contentid, $trackresults, $context)
+            [
+                'data-bunamrag-interactive' => 'multiplechoice',
+                'data-onebyone' => $onebyone ? '1' : '0',
+                'data-randomizequestions' => $randomizequestions ? '1' : '0',
+            ] + self::tracking_attrs($contentid, $trackresults, $context)
         );
     }
 
