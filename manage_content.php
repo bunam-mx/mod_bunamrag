@@ -63,6 +63,17 @@ $blocktypeicons = [
 ];
 $blocktypes = array_keys($blocktypeicons);
 
+// Every toolbar button the vendored markdown-text-editor library supports
+// (thirdpartylibs/markdown-text-editor.min.js). Passed explicitly to the
+// main textcontent editor so newly-added library buttons (e.g. "variables")
+// are not silently left out - the library's own built-in default toolbar
+// does not include every button it knows how to render.
+$fulltoolbar = [
+    'undo', 'redo', 'heading', 'blockquote', 'ul', 'ol', 'checklist', 'outdent', 'indent',
+    'bold', 'italic', 'strikethrough', 'code', 'codeblock', 'hr', 'table', 'link', 'buttonlink',
+    'accordion', 'modal', 'tooltip', 'popover', 'card', 'image', 'variables', 'preview',
+];
+
 /**
  * Renumber the sortorder of all blocks of a subtheme sequentially, in the
  * given order of ids.
@@ -353,7 +364,10 @@ foreach ($blocks as $index => $block) {
         $sourceid = 'mdsource-' . $block->id;
         echo html_writer::tag('textarea', s($block->content), ['name' => 'content', 'id' => $sourceid]);
         $PAGE->requires->js(new moodle_url('/mod/bunamrag/thirdpartylibs/markdown-text-editor.min.js'));
-        $PAGE->requires->js_call_amd('mod_bunamrag/markdowneditor', 'init', [$sourceid]);
+        $PAGE->requires->js_call_amd('mod_bunamrag/markdowneditor', 'init', [
+            $sourceid,
+            ['toolbar' => $fulltoolbar],
+        ]);
     } else if ($block->blocktype === 'videourl') {
         $urlid = 'url-' . $block->id;
         $transcriptid = 'mdtranscript-' . $block->id;
