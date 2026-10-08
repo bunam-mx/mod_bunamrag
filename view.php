@@ -110,7 +110,13 @@ function bunamrag_render_subtheme_blocks(\stdClass $subtheme, \context $moduleco
             case 'textcontent':
                 echo html_writer::start_tag('article', ['class' => 'p-2 my-5']);
                 echo html_writer::div(
-                    format_text($block->content, $block->contentformat, ['context' => $modulecontext]),
+                    // noclean: the markdown editor's toolbar can insert Bootstrap
+                    // components (tooltip, popover, modal, accordion, ...) that rely on
+                    // data-toggle/data-target/role attributes which clean_text() (run by
+                    // format_text() by default) strips as untrusted HTML. Content here is
+                    // only ever authored by mod/bunamrag:manage (editingteacher/manager),
+                    // the same trust level Moodle already extends elsewhere via trusttext.
+                    format_text($block->content, $block->contentformat, ['context' => $modulecontext, 'noclean' => true]),
                     'bunamrag-content-text my-5'
                 );
                 echo html_writer::end_tag('article');
