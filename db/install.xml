@@ -70,6 +70,7 @@
         <FIELD NAME="renderedhtml" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="HTML compiled from content at save time, for interactive blocks. Avoids reprocessing the JSON on every view."/>
         <FIELD NAME="title" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Short label identifying this interactive block in the results summary. Only used by interactive blocks."/>
         <FIELD NAME="trackresults" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Whether this interactive block's attempts/best score are recorded and shown in the results summary. Only meaningful for multiplechoice/fillblanks/dragwords - dialogcards are never tracked."/>
+        <FIELD NAME="instructions" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Markdown shown before the interactive is rendered to the student. Only used by interactive blocks."/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

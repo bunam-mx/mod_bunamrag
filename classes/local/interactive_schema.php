@@ -49,6 +49,7 @@ class interactive_schema {
     public static function templates(): array {
         $dialogcards = [
             'type' => 'dialogcards',
+            'instructions' => '',
             'cards' => [
                 [
                     'front' => ['image' => 'https://...', 'alt' => 'Descripción de la imagen', 'text' => '', 'audio' => ''],
@@ -59,6 +60,8 @@ class interactive_schema {
 
         $multiplechoice = [
             'type' => 'multiplechoice',
+            'instructions' => '',
+            'trackresults' => false,
             'onebyone' => false,
             'randomizequestions' => false,
             'questions' => [
@@ -85,6 +88,8 @@ class interactive_schema {
 
         $blanktext = [
             'type' => 'fillblanks',
+            'instructions' => '',
+            'trackresults' => false,
             'text' => 'Escribe el texto con espacios como {{respuesta|alternativa}} aquí.',
             'casesensitive' => false,
             'globalfeedback' => [
@@ -116,17 +121,49 @@ class interactive_schema {
             return [get_string('interactive_error_invalidjson', 'mod_bunamrag')];
         }
 
+        $sharederrors = self::validate_shared_fields($decoded);
+
         switch ($type) {
             case 'dialogcards':
-                return self::validate_dialogcards($decoded);
+                return array_merge($sharederrors, self::validate_dialogcards($decoded));
             case 'multiplechoice':
-                return self::validate_multiplechoice($decoded);
+                return array_merge($sharederrors, self::validate_multiplechoice($decoded));
             case 'fillblanks':
             case 'dragwords':
-                return self::validate_blanktext($decoded);
+                return array_merge($sharederrors, self::validate_blanktext($decoded));
             default:
-                return [get_string('interactive_error_missingtype', 'mod_bunamrag', implode(', ', self::TYPES))];
+                return array_merge(
+                    $sharederrors,
+                    [get_string('interactive_error_missingtype', 'mod_bunamrag', implode(', ', self::TYPES))]
+                );
         }
+    }
+
+    /**
+     * Validate the optional fields shared by every subtype: "instructions"
+     * (shown before the interactive renders) and "trackresults" (whether to
+     * include this block in the results summary). Both can also be set from
+     * the manage_content.php form instead - when present here, the JSON
+     * value takes precedence (see manage_content.php's savecontent action).
+     *
+     * @param \stdClass $decoded
+     * @return string[]
+     */
+    private static function validate_shared_fields(\stdClass $decoded): array {
+        $errors = [];
+
+        if (property_exists($decoded, 'instructions')
+            && $decoded->instructions !== null
+            && !is_string($decoded->instructions)
+        ) {
+            $errors[] = get_string('interactive_error_instructions', 'mod_bunamrag');
+        }
+
+        if (property_exists($decoded, 'trackresults') && !is_bool($decoded->trackresults)) {
+            $errors[] = get_string('interactive_error_trackresults', 'mod_bunamrag');
+        }
+
+        return $errors;
     }
 
     /**
@@ -151,6 +188,8 @@ class interactive_schema {
      *             dialogcards, which are never tracked.
      * @param string $title optional label shown above the block and used to
      *               identify it in the results summary.
+     * @param string $instructions optional markdown shown above the block,
+     *               below the title, before the interactive itself.
      * @return string HTML.
      */
     public static function render(
@@ -159,7 +198,8 @@ class interactive_schema {
         \context $context,
         int $contentid = 0,
         bool $trackresults = false,
-        string $title = ''
+        string $title = '',
+        string $instructions = ''
     ): string {
         switch ($type) {
             case 'dialogcards':
@@ -178,11 +218,18 @@ class interactive_schema {
                 return '';
         }
 
-        if (trim($title) === '') {
-            return $inner;
+        $prefix = '';
+        if (trim($title) !== '') {
+            $prefix .= \html_writer::tag('h4', format_string($title), ['class' => 'bunamrag-interactive-title']);
+        }
+        if (trim($instructions) !== '') {
+            $prefix .= \html_writer::div(
+                format_text($instructions, FORMAT_MARKDOWN, ['context' => $context]),
+                'bunamrag-interactive-instructions'
+            );
         }
 
-        return \html_writer::tag('h4', format_string($title), ['class' => 'bunamrag-interactive-title']) . $inner;
+        return $prefix . $inner;
     }
 
     /**

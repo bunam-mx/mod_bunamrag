@@ -305,5 +305,16 @@ function xmldb_bunamrag_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026091401, 'bunamrag');
     }
 
+    if ($oldversion < 2026101200) {
+        $table = new xmldb_table('bunamrag_content');
+        $field = new xmldb_field('instructions', XMLDB_TYPE_TEXT, null, null, null, null, null, 'trackresults');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Bunamrag savepoint reached.
+        upgrade_mod_savepoint(true, 2026101200, 'bunamrag');
+    }
+
     return true;
 }

@@ -125,12 +125,29 @@ if ($action !== '' && confirm_sesskey()) {
 
             if ($currentblocktype === 'interactive') {
                 $title = trim(optional_param('title', '', PARAM_TEXT));
-                // dialogcards are never tracked, regardless of what the form
-                // sent - the checkbox is hidden for that subtype client-side,
-                // but this is the authoritative check.
+                $instructions = optional_param('instructions', '', PARAM_RAW);
+
+                // "type" is always taken from the JSON - the subtype <select>
+                // in the form is only there to preload a template, its value
+                // is never read here. "instructions" and "trackresults" are
+                // like it: the form fields stay available for teachers who'd
+                // rather fill them manually, but if the JSON itself declares
+                // either key, that value wins over whatever the form sent.
                 $decoded = json_decode($content);
                 $type = is_object($decoded) ? ($decoded->type ?? '') : '';
-                $trackresults = ($type !== 'dialogcards') && optional_param('trackresults', 0, PARAM_BOOL);
+
+                if (is_object($decoded) && property_exists($decoded, 'instructions') && $decoded->instructions !== null) {
+                    $instructions = (string) $decoded->instructions;
+                }
+
+                // dialogcards are never tracked, regardless of what the form
+                // or the JSON sent - the checkbox is hidden for that subtype
+                // client-side, but this is the authoritative check.
+                $trackresults = optional_param('trackresults', 0, PARAM_BOOL);
+                if (is_object($decoded) && property_exists($decoded, 'trackresults')) {
+                    $trackresults = (bool) $decoded->trackresults;
+                }
+                $trackresults = $trackresults && $type !== 'dialogcards';
 
                 $errors = (json_last_error() !== JSON_ERROR_NONE)
                     ? [get_string('interactive_error_invalidjson', 'mod_bunamrag', json_last_error_msg())]
@@ -145,8 +162,9 @@ if ($action !== '' && confirm_sesskey()) {
                         'interactivetype' => $type,
                         'title' => $title,
                         'trackresults' => $trackresults ? 1 : 0,
+                        'instructions' => $instructions,
                         'renderedhtml' => interactive_schema::render(
-                            $type, $decoded, $modulecontext, $contentid, $trackresults, $title
+                            $type, $decoded, $modulecontext, $contentid, $trackresults, $title, $instructions
                         ),
                     ]);
                 }
@@ -397,6 +415,7 @@ foreach ($blocks as $index => $block) {
         $selectid = 'interactivetype-' . $block->id;
         $sourceid = 'interactivejson-' . $block->id;
         $titleid = 'interactivetitle-' . $block->id;
+        $instructionsid = 'interactiveinstructions-' . $block->id;
         $trackwrapid = 'interactivetrackwrap-' . $block->id;
 
         echo html_writer::tag('label', get_string('interactivesubtype', 'mod_bunamrag'), [
@@ -426,6 +445,17 @@ foreach ($blocks as $index => $block) {
             'class' => 'form-control mb-2',
             'style' => 'max-width: 20rem;',
             'placeholder' => get_string('interactivetitle_placeholder', 'mod_bunamrag'),
+        ]);
+
+        echo html_writer::tag('label', get_string('interactiveinstructions', 'mod_bunamrag'), [
+            'for' => $instructionsid, 'class' => 'd-block small text-muted mb-1',
+        ]);
+        echo html_writer::tag('textarea', s($block->instructions ?? ''), [
+            'name' => 'instructions',
+            'id' => $instructionsid,
+            'rows' => '2',
+            'class' => 'form-control mb-2',
+            'placeholder' => get_string('interactiveinstructions_placeholder', 'mod_bunamrag'),
         ]);
 
         echo html_writer::start_div('form-check mb-2', ['id' => $trackwrapid]);
