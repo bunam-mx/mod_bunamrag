@@ -92,6 +92,9 @@ class interactive_schema {
             'trackresults' => false,
             'text' => 'Escribe el texto con espacios como {{respuesta|alternativa}} aquí.',
             'casesensitive' => false,
+            'blankfeedback' => [
+                ['correct' => '¡Correcto!', 'incorrect' => 'No es correcto, intenta de nuevo.'],
+            ],
             'globalfeedback' => [
                 ['from' => 90, 'to' => 100, 'feedback' => '¡Excelente!'],
                 ['from' => 0, 'to' => 90, 'feedback' => 'Sigue practicando.'],
@@ -337,7 +340,47 @@ class interactive_schema {
             }
         }
 
-        return array_merge($errors, self::validate_globalfeedback($decoded));
+        return array_merge($errors, self::validate_blankfeedback($decoded), self::validate_globalfeedback($decoded));
+    }
+
+    /**
+     * Validate the optional "blankfeedback" array shared by fillblanks and
+     * dragwords: positive/negative feedback per blank, matched by position
+     * to the blanks found in "text" (element i <-> the i-th {{...}}).
+     *
+     * @param \stdClass $decoded
+     * @return string[]
+     */
+    private static function validate_blankfeedback(\stdClass $decoded): array {
+        $errors = [];
+
+        if (!property_exists($decoded, 'blankfeedback') || $decoded->blankfeedback === null) {
+            return $errors;
+        }
+
+        if (!is_array($decoded->blankfeedback)) {
+            $errors[] = get_string('interactive_error_blankfeedback', 'mod_bunamrag');
+            return $errors;
+        }
+
+        foreach ($decoded->blankfeedback as $index => $entry) {
+            if ($entry === null) {
+                // A blank with deliberately no feedback - allowed.
+                continue;
+            }
+            if (!is_object($entry)) {
+                $errors[] = get_string('interactive_error_blankfeedback_entry', 'mod_bunamrag', $index + 1);
+                continue;
+            }
+            foreach (['correct', 'incorrect'] as $key) {
+                if (isset($entry->$key) && !is_string($entry->$key)) {
+                    $errors[] = get_string('interactive_error_blankfeedback_entry', 'mod_bunamrag', $index + 1);
+                    break;
+                }
+            }
+        }
+
+        return $errors;
     }
 
     /**
@@ -455,6 +498,51 @@ class interactive_schema {
         // this JSON is embedded inside a <script> tag, and an unescaped
         // "</script" inside a feedback message would terminate it early.
         return json_encode($ranges, JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * Render one fillblanks/dragwords "blankfeedback" entry as a hidden
+     * <li>, to be revealed - showing only the message matching the
+     * student's answer - in the feedback list below the interactive once
+     * it's checked. Returns '' when there is nothing to show, so blanks
+     * without feedback don't add an empty item.
+     *
+     * Deliberately a block-level item in a dedicated list BELOW the
+     * interactive, not inline next to the blank and not a tooltip:
+     * format_text() wraps even a single line of markdown in a block tag
+     * (e.g. <p>...</p>), and a block element sitting inline in the middle
+     * of the fillblanks/dragwords sentence broke the whole block's layout.
+     * A tooltip would dodge that, but needs Bootstrap's JS plugin, doesn't
+     * work on touch (no hover), and is easy to miss - a plain visible list
+     * has none of those failure modes.
+     *
+     * @param mixed $entry the blankfeedback[i] element, or null/missing.
+     * @param int $blankindex matches the blank's own data-index.
+     * @param \context $context
+     * @return string
+     */
+    private static function render_blank_feedback_item($entry, int $blankindex, \context $context): string {
+        if (!is_object($entry)) {
+            return '';
+        }
+
+        $correct = !empty($entry->correct)
+            ? format_text((string) $entry->correct, FORMAT_MARKDOWN, ['context' => $context])
+            : '';
+        $incorrect = !empty($entry->incorrect)
+            ? format_text((string) $entry->incorrect, FORMAT_MARKDOWN, ['context' => $context])
+            : '';
+
+        if ($correct === '' && $incorrect === '') {
+            return '';
+        }
+
+        return \html_writer::tag(
+            'li',
+            \html_writer::tag('span', $correct, ['class' => 'bunamrag-blank-feedback-correct', 'hidden' => 'hidden']) .
+            \html_writer::tag('span', $incorrect, ['class' => 'bunamrag-blank-feedback-incorrect', 'hidden' => 'hidden']),
+            ['data-index' => $blankindex, 'hidden' => 'hidden']
+        );
     }
 
     /**
@@ -640,9 +728,11 @@ class interactive_schema {
     ): string {
         $segments = self::parse_blank_text((string) $decoded->text);
         $casesensitive = !empty($decoded->casesensitive) ? '1' : '0';
+        $blankfeedback = is_array($decoded->blankfeedback ?? null) ? $decoded->blankfeedback : [];
 
         $body = '';
         $chips = [];
+        $feedbackitems = [];
         $blankindex = 0;
 
         foreach ($segments as $segment) {
@@ -658,6 +748,9 @@ class interactive_schema {
 
             $blankindex++;
             $alternatives = implode('|', $segment['alternatives']);
+            $feedbackitems[] = self::render_blank_feedback_item(
+                $blankfeedback[$blankindex - 1] ?? null, $blankindex, $context
+            );
 
             if ($dragwords) {
                 $body .= \html_writer::tag('span', '', [
@@ -682,6 +775,7 @@ class interactive_schema {
                     'class' => 'bunamrag-fillblank',
                     'data-alternatives' => $alternatives,
                     'data-casesensitive' => $casesensitive,
+                    'data-index' => $blankindex,
                     'aria-label' => get_string('interactive_fillblanks_blank', 'mod_bunamrag', $blankindex),
                     'size' => max(6, mb_strlen($segment['alternatives'][0] ?? '') + 2),
                 ]);
@@ -692,6 +786,16 @@ class interactive_schema {
             'type' => 'button',
             'class' => 'btn btn-primary btn-sm mt-2 bunamrag-blanktext-check',
         ]);
+
+        $feedbacklist = '';
+        $feedbackitems = array_filter($feedbackitems, fn($item) => $item !== '');
+        if (!empty($feedbackitems)) {
+            $feedbacklist = \html_writer::div(
+                \html_writer::tag('ul', implode('', $feedbackitems), ['class' => 'bunamrag-blank-feedback-items']),
+                'bunamrag-blank-feedback-list mt-2',
+                ['hidden' => 'hidden']
+            );
+        }
 
         $globalfeedback = \html_writer::div(
             '', 'bunamrag-blanktext-globalfeedback mt-2', ['aria-live' => 'polite', 'hidden' => 'hidden']
@@ -712,7 +816,7 @@ class interactive_schema {
         return \html_writer::div(
             $extra .
             \html_writer::div(nl2br($body), 'bunamrag-blanktext-body') .
-            $checkbutton . $globalfeedback . $globalfeedbackdata,
+            $checkbutton . $feedbacklist . $globalfeedback . $globalfeedbackdata,
             $dragwords ? 'bunamrag-dragwords' : 'bunamrag-fillblanks',
             ['data-bunamrag-interactive' => $dragwords ? 'dragwords' : 'fillblanks']
                 + self::tracking_attrs($contentid, $trackresults, $context)

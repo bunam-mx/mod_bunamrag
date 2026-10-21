@@ -112,9 +112,53 @@ define(['core_filters/events', 'core/ajax', 'core/notification'], function(Filte
         }])[0].catch(Notification.exception);
     };
 
+    /**
+     * Reveal a fillblanks/dragwords blank's own positive/negative feedback
+     * (rendered server-side as a hidden <li> by
+     * interactive_schema::render_blank_feedback_item()) in the feedback
+     * list below the interactive, showing only the message matching
+     * whether the student got that specific blank right. A no-op if that
+     * blank has no feedback item (most blanks won't).
+     *
+     * A list below the block, not inline next to the blank and not a
+     * tooltip: format_text() wraps even one line of feedback in a block
+     * tag, and a block element sitting inline in the middle of the
+     * fillblanks/dragwords sentence broke the whole block's layout. A
+     * tooltip dodges that but needs Bootstrap's JS plugin loaded, doesn't
+     * work on touch (no hover), and is easy to miss.
+     *
+     * @param {Element} container
+     * @param {String|Number} blankIndex matches the blank element's own data-index.
+     * @param {Boolean} isRight
+     */
+    var showBlankFeedback = function(container, blankIndex, isRight) {
+        var item = container.querySelector('.bunamrag-blank-feedback-items li[data-index="' + blankIndex + '"]');
+        if (!item) {
+            return;
+        }
+
+        var correct = item.querySelector('.bunamrag-blank-feedback-correct');
+        var incorrect = item.querySelector('.bunamrag-blank-feedback-incorrect');
+        if (correct) {
+            correct.hidden = !isRight;
+        }
+        if (incorrect) {
+            incorrect.hidden = isRight;
+        }
+        item.classList.toggle('is-correct', isRight);
+        item.classList.toggle('is-incorrect', !isRight);
+        item.hidden = false;
+
+        var list = container.querySelector('.bunamrag-blank-feedback-list');
+        if (list) {
+            list.hidden = false;
+        }
+    };
+
     return {
         initEach: initEach,
         showGlobalFeedback: showGlobalFeedback,
-        recordAttempt: recordAttempt
+        recordAttempt: recordAttempt,
+        showBlankFeedback: showBlankFeedback
     };
 });

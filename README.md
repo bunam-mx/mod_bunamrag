@@ -303,6 +303,12 @@ which finishes automatically).
   "trackresults": true,
   "text": "The process is called {{photosynthesis}} and needs {{CO2|carbon dioxide}} and {{water|H2O}}. It happens in the {{chloroplast|chloroplasts}}.",
   "casesensitive": false,
+  "blankfeedback": [
+    { "correct": "Right, that's the process' name.", "incorrect": "Not quite - think of the Greek roots: light + synthesis." },
+    { "correct": "Correct, it's one of the two raw materials.", "incorrect": "This is a gas the plant absorbs from the air." },
+    null,
+    { "correct": "Yes, inside this organelle.", "incorrect": "Think of the organelle that gives leaves their green color." }
+  ],
   "globalfeedback": [
     { "from": 100, "to": 100, "feedback": "Perfect!" },
     { "from": 0, "to": 100, "feedback": "Review the process and try again." }
@@ -336,6 +342,17 @@ which finishes automatically).
   bank's shuffle order is fixed **at save time**, not re-randomized per student visit — unlike
   `multiplechoice`'s shuffling, which is done live in the browser.
 - `score = correct blanks / total blanks × 100`.
+- **`blankfeedback`** (optional, shared by both): an array matched **by position** to the
+  `{{...}}` blanks in `text` — element *i* is the feedback for the *i*-th blank, in order.
+  Each entry is either `null` (no feedback for that blank, as with the third blank above) or
+  an object with optional `correct`/`incorrect` Markdown. After the student presses "Check", a
+  **feedback list below the interactive** reveals one colored block per blank that has an
+  entry (green/correct or red/incorrect, no blank numbering), showing whichever of the two
+  matches their answer. It's a separate list rather than text next to the blank on purpose:
+  `format_text()` wraps even one line of Markdown in a block
+  tag, and a block element sitting inline in the middle of a sentence made the browser's
+  parser break the whole block's layout. An array shorter than the number of blanks is fine —
+  the remaining blanks just don't get a line in the list.
 
 ### Shared pieces
 

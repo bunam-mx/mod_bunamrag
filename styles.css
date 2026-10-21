@@ -88,6 +88,29 @@
     border-color: #c62828;
     background: #fdecea;
 }
+.bunamrag-blank-feedback-items {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.bunamrag-blank-feedback-items li {
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid transparent;
+}
+.bunamrag-blank-feedback-items li.is-correct {
+    border-color: #2e7d32;
+    background: #edf7ed;
+    color: #1b5e20;
+}
+.bunamrag-blank-feedback-items li.is-incorrect {
+    border-color: #c62828;
+    background: #fdecea;
+    color: #8e1f1f;
+}
 
 /* Drag the words */
 .bunamrag-dragwords-bank {

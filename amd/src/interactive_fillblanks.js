@@ -16,7 +16,8 @@
 /**
  * Fill the blanks interactive: compares each inline <input> against its
  * "|"-separated list of accepted answers (respecting case sensitivity),
- * then reveals a score-range global feedback message.
+ * reveals that blank's own positive/negative feedback (if it has one), then
+ * reveals a score-range global feedback message.
  *
  * @module      mod_bunamrag/interactive_fillblanks
  * @copyright   2026 Omar Terrazas Razo <terrazasrazo@gmail.com>
@@ -45,6 +46,7 @@ define(['mod_bunamrag/interactive_util'], function(Util) {
             }
             input.classList.toggle('is-correct', isRight);
             input.classList.toggle('is-incorrect', !isRight);
+            Util.showBlankFeedback(container, input.dataset.index, isRight);
         });
 
         var score = total > 0 ? (rightcount / total) * 100 : 0;
